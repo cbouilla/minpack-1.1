@@ -931,8 +931,8 @@ int ssqjac(int m, int n, double *x, double *fjac, int ldfjac, int nprob)
 		}
 		break;
 
-	case 14:
 		/* BROWN AND DENNIS FUNCTION. */
+	case 14:
 		for (int i = 1; i <= m; ++i) {
 			double temp = i / 5.;
 			double ti = sin(temp);

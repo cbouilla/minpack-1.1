@@ -2,7 +2,7 @@ CFLAGS= -O3 -Wall -Wextra -g -Wno-builtin-declaration-mismatch -I.
 LDFLAGS= -g
 default: libminpack.a
 
-.phony: clean test
+.phony: clean test bench
 
 CFLAGS += $(shell pkg-config --cflags blas lapack)
 LDLIBS += $(shell pkg-config --libs blas lapack)
@@ -18,7 +18,12 @@ libminpack.a:  $(OBJS)
 	ar r $@ $(OBJS); ranlib $@
 
 check: libminpack.a
-	cd tests ; $(MAKE)
+	cd tests ; $(MAKE) check
+
+bench: libminpack.a
+	cd benchmarks ; $(MAKE) bench
 
 clean:
 	rm -f *.o libminpack.a
+	cd tests ; $(MAKE) clean
+	cd benchmarks ; $(MAKE) clean
