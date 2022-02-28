@@ -1,9 +1,6 @@
 CFLAGS = -Wall -Wextra
 LDLIBS = -lm
 
-CFLAGS += $(shell pkg-config --cflags blas lapack)
-LDLIBS += $(shell pkg-config --libs blas lapack)
-
 all: check
 
 .phony: check clean

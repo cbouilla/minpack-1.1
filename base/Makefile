@@ -1,11 +1,8 @@
-CFLAGS= -O3 -Wall -Wextra -g -Wno-builtin-declaration-mismatch -I.
+CFLAGS= -O3 -Wall -Wextra
 LDFLAGS= -g
 default: libminpack.a
 
 .phony: clean test bench
-
-CFLAGS += $(shell pkg-config --cflags blas lapack)
-LDLIBS += $(shell pkg-config --libs blas lapack)
 
 OBJS = enorm.o qrfac.o qrsolv.o fdjac2.o fdjac1.o lmpar.o qform.o dogleg.o r1updt.o r1mpyq.o \
        lmdif1.o lmdif.o lmder.o lmder1.o \

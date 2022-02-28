@@ -1,9 +1,6 @@
 CFLAGS = -Wall -Wextra
 LDLIBS = -lm
 
-CFLAGS += $(shell pkg-config --cflags blas lapack)
-LDLIBS += $(shell pkg-config --libs blas lapack)
-
 all: bench
 
 bench: speed_lmder1 speed_lmdif1 speed_lmdif1_cross speed_lmder1_cross speed_hybrj1
