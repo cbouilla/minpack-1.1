@@ -1,6 +1,6 @@
-#include <f2c.h>
 #include <math.h>
 
+#include "minpack.h"
 /*
  *     subroutine r1mpyq 
  *

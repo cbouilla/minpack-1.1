@@ -1,4 +1,3 @@
-#include <f2c.h>
 #include <float.h>
 #include <math.h>
 

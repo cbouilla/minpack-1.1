@@ -142,8 +142,8 @@ void qrsolv_(const int *n, double *r, const int *ldr, int *ipvt,
 void r1updt_(const int *m, const int *n, double *s, const int *ls, 
 	const double *u, double *v, double *w, int *sing);
 
-void r1mpyq_(const int *m, const int *n, double *a, const int *lda, 
-	const double *v, const double *w);
+void r1mpyq_(const int *m, const int *n, double *a, const int *lda, double *v, double *w);
+
 
 void qform_(const int *m, const int *n, double *q, const int *ldq, double *wa);
 

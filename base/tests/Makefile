@@ -21,4 +21,4 @@ check: test_lmdif1 test_lmder1 test_hybrd1 test_hybrj1 test_chkder
 	prove -f ./test_lmdif1 ./test_lmder1 ./test_hybrd1 ./test_hybrj1 ./test_chkder
 
 clean:
-	rm -f *.o test_lmdif1 test_lmder1 test_hybrd1 test_hybrj1 
+	rm -f *.o test_lmdif1 test_lmder1 test_hybrd1 test_hybrj1 test_chkder

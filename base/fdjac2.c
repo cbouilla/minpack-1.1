@@ -87,7 +87,7 @@ void fdjac2_(minpack_func_mn fcn, const int *m, const int *n, double *x,
 	/* epsmch is the machine precision. */
 	double epsmch = DBL_EPSILON;
 
-	double eps = sqrt((fmax(*epsfcn, epsmch)));
+	double eps = sqrt(fmax(*epsfcn, epsmch));
 	for (int j = 0; j < *n; ++j) {
 		double temp = x[j];
 		double h = eps * fabs(x[j]);

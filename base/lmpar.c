@@ -1,6 +1,5 @@
 #include <math.h>
 #include <float.h>
-#include <stdbool.h>
 
 #include "minpack.h"
 

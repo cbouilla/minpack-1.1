@@ -1,9 +1,6 @@
-#include <stdbool.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <float.h>
 #include <math.h>
-#include <assert.h>
 
 #include "minpack.h"
 
