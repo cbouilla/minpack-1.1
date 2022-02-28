@@ -4,13 +4,6 @@
 extern "C" {
 #endif
 
-// #define USE_LAPACK
-// #define USE_BLAS_NRM2
-// #define USE_BLAS_COPY
-// #define USE_BLAS_TRMV
-// #define USE_BLAS_ROT
-// #define USE_BLAS_TRSV
-
 /************************* user-supplied functions *********************************/
 
 /* 
@@ -154,46 +147,6 @@ void qform_(const int *m, const int *n, double *q, const int *ldq, double *wa);
 void dogleg_(const int *n, double *r__, const int *lr, 
 	const double *diag, const double *qtb, const double *delta, 
     double *x, double *wa1, double *wa2);
-
-/**************************** BLAS ************************/
-
-extern void dcopy_(const int *n, const double *dx, const int *incx, double *dy, const int *incy);
-
-extern double dnrm2_(const int * n, double const * x, int * incx);
-
-extern void drotg_(double *a, double *b, double *c, double *d);
-
-extern void drot_(const int *n, double *dx, const int *incx, double *dy, 
-	const int *incy, const double *c, const double *s);
-
-
-extern void dtrsv_(const char *UPLO, const char *TRANS, const char *DIAG, const int *N, 
-	const double *A, const int *LDA, double *X, const int *INCX);
-
-extern void dtrmv_(const char *UPlo, const char * TRANS, const char *diag,
-	const int *N, const double *A, const int *lda, const double *X, const int *incx);
-
-extern void dgemv_(const char * TRANS, const int *M, const int *N, const double *alpha, 
-	const double *A, const int *lda, const double *X, const int *incx, 
-	const double *beta, double *Y, const int *incy);
-
-/**************************** LAPACK ************************/
-
-extern int dgeqp3_(const int *m, const int *n, double *a, const int *lda, 
-	int *jpvt, double *tau, double *work, const int *lwork, int *info);
-
-extern int dgeqrf_(const int *m, const int *n, double *a, const int *lda, 
-	double *tau, double *work, const int *lwork, int *info);
-
-extern int dormqr_(const char *side, const char *trans, 
-	const int *m, const int *n, const int *k, 
-	const double *a, const int *lda, const double *tau,
-    double *c, const int *ldc, double *work, const int *lwork, int *info);
-
-extern int dorgqr_(const int *m, const int *n, const int *k, 
-	const double *a, const int *lda, const double *tau,
-    double *work, const int *lwork, int *info);
-
 
 #ifdef __cplusplus
 }
