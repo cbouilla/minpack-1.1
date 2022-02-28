@@ -90,24 +90,15 @@ void qrsolv_(const int *n, double *r, const int *ldr, int *ipvt, double *diag, d
 	int r_dim1 = *ldr;
 	int r_offset = 1 + r_dim1 * 1;
 	r -= r_offset;
-	int c1 = 1;
 
 	/* copy R and (Q transpose)*b to preserve input and initialize S. */
 	/* in particular, save the diagonal elements of R in x. */
-#ifdef USE_BLAS_COPY
-	for (int j = 1; j <= *n; ++j)
-		for (int i = j; i <= *n; ++i)
-			r[i + j * r_dim1] = r[j + i * r_dim1];
-	dcopy_(n, &qtb[1], &c1, &wa[1], &c1);
-	dcopy_(n, &r[r_offset], &r_offset, &x[1], &c1);
-#else
 	for (int j = 1; j <= *n; ++j) {
  		for (int i = j; i <= *n; ++i)
  			r[i + j * r_dim1] = r[j + i * r_dim1];
 		x[j] = r[j + j * r_dim1];
 		wa[j] = qtb[j];
 	}
-#endif
 
 	/* eliminate the diagonal matrix D using a givens rotation. */
 	for (int j = 1; j <= *n; ++j) {
@@ -152,17 +143,11 @@ void qrsolv_(const int *n, double *r, const int *ldr, int *ipvt, double *diag, d
 			wa[k] = temp;
 
 			/* accumulate the transformation in the row of s. */
-#ifdef USE_BLAS_ROT
-			int len = *n - k;
-			int c1 = 1;
-			drot_(&len, &r[k+1 + k * r_dim1], &c1, &sdiag[k+1], &c1, &cos, &sin);
-#else
 			for (int i = k + 1; i <= *n; ++i) {
 				temp = cos * r[i + k * r_dim1] + sin * sdiag[i];
 				sdiag[i] = -sin * r[i + k * r_dim1] + cos * sdiag[i];
 				r[i + k * r_dim1] = temp;
 			}
-#endif
 		}
 	}
 
@@ -178,9 +163,6 @@ void qrsolv_(const int *n, double *r, const int *ldr, int *ipvt, double *diag, d
 	for (int j = nsing + 1; j <= *n; ++j)
 		wa[j] = 0;
 
-#ifdef USE_BLAS_TRSV
-	dtrsv_("Upper-triangular", "Non-Transpose", "Non-Unit diagonal", &nsing, &r[r_offset], ldr, &wa[1], &c1);
-#else
 	for (int k = 1; k <= nsing; ++k) {
 	     int j = nsing - k + 1;
 	     double sum = 0;
@@ -188,19 +170,13 @@ void qrsolv_(const int *n, double *r, const int *ldr, int *ipvt, double *diag, d
 	             sum += r[i + j * r_dim1] * wa[i];
 	     wa[j] = (wa[j] - sum) /  r[j + j * r_dim1];
 	}
-#endif
 
-#ifdef USE_BLAS_COPY
-	dcopy_(n, &r[r_offset], &r_offset, &sdiag[1], &c1);
-	dcopy_(n, &x[1], &c1, &r[r_offset], &r_offset);
-#else
 	for (int j = 1; j <= *n; ++j) {
 		/* store the diagonal element of s and restore
 		   the corresponding diagonal element of R. */
 		sdiag[j] = r[j + j * r_dim1];
 		r[j + j * r_dim1] = x[j];
 	}
-#endif
 
 	/* permute the components of z back to components of x. */
 	for (int j = 1; j <= *n; ++j) {

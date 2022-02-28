@@ -266,44 +266,6 @@ void lmdif_(minpack_func_mn fcn, const int * m, const int * n, double * x,
 				delta = *factor;
 		}
 
-#ifdef USE_LAPACK
-		// wa1, wa3 and wa4 are available. wa4 --> fvec. wa1 --> tau
-		double *tau = wa1;
-
-		/* set all columns free */
-		for (int j = 1; j <= *n; j++)
-			ipvt[j] = 0;
-	
-		/* query optimal size of work */
-		int lapack_info = 0;
-		int lwork = -1;
-		dgeqp3_(m, n, &fjac[fjac_offset], ldfjac, &ipvt[1], &tau[1], &tau[1], &lwork, &lapack_info);	// LAPACK
-		assert(lapack_info == 0);
-		lwork =	tau[1] + 100000;
-		assert(lwork >= 3 * (*n) + 1);
-	
-		/* alloc work area. TODO: move to start of function */
-		double *work = malloc(lwork * sizeof(*work));
-		assert(work != NULL);
-	
-		/* compute the QR factorization of the jacobian. */
-		dgeqp3_(m, n, &fjac[fjac_offset], ldfjac, &ipvt[1], &tau[1], work, &lwork, &lapack_info);	// LAPACK
-		assert(lapack_info == 0);
-
-		/* qtf <-- (Q transpose)*fvec */
-		for (int i = 1; i <= *m; ++i)
-			wa4[i] = fvec[i];
-
-		int c1 = 1;
-		dormqr_("Left", "Transpose", m, &c1, n, &fjac[fjac_offset], ldfjac, &tau[1], &wa4[1], m, work, &lwork, &lapack_info);
-		assert(lapack_info == 0);
-		
-		for (int j = 1; j <= *n; ++j)
-			qtf[j] = wa4[j];
-
-		/* TODO: move to fini */
-		free(work);
-#else
 		double *rdiag = wa1;
 		int pivot = 1;
 		qrfac_(m, n, &fjac[fjac_offset], ldfjac, &pivot, &ipvt[1], n, &rdiag[1], &acnorm[1], &wa3[1]);
@@ -323,7 +285,6 @@ void lmdif_(minpack_func_mn fcn, const int * m, const int * n, double * x,
  			fjac[j + j * fjac_dim1] = wa1[j];
 			qtf[j] = wa4[j];
 		}
-#endif
 
 		/* Compute the norm of the scaled gradient. */
 		gnorm = 0;
@@ -385,14 +346,6 @@ void lmdif_(minpack_func_mn fcn, const int * m, const int * n, double * x,
 
 			/* compute the scaled predicted reduction and
 			   the scaled directional derivative. */
-#ifdef USE_BLAS_TRMV
-			for (int j = 1; j <= *n; ++j) {
-				int l = ipvt[j];
-				wa3[j] =  wa1[l];
-			}
-			int c1 = 1;
-			dtrmv_("Upper", "Notrans", "non-unit", n, &fjac[fjac_offset], ldfjac, &wa3[1], &c1);
-#else
 			for (int j = 1; j <= *n; ++j) {
 				wa3[j] = 0.0;
 				int l = ipvt[j];
@@ -400,7 +353,6 @@ void lmdif_(minpack_func_mn fcn, const int * m, const int * n, double * x,
 				for (int i = 1; i <= j; ++i)
 					wa3[i] += fjac[i + j * fjac_dim1] * temp;
 			}
-#endif
 			double temp1 = enorm_(n, &wa3[1]) / fnorm;
 			double temp2 = sqrt(par) * pnorm / fnorm;
 			double prered = temp1 * temp1 + 2 * temp2 * temp2;
@@ -432,19 +384,12 @@ void lmdif_(minpack_func_mn fcn, const int * m, const int * n, double * x,
 			/* test for successful iteration. */
 			if (ratio >= 0.0001) {
 				/* successful iteration. update x, fvec, and their norms. */
-#ifdef USE_BLAS_COPY
-				dcopy_(n, &wa2[1], &c1, &x[1], &c1);
-				dcopy_(m, &wa4[1], &c1, &fvec[1], &c1);
-				for (int j = 1; j <= *n; ++j)
-					wa2[j] = diag[j] * wa2[j];
-#else
 				for (int j = 1; j <= *n; ++j) {
 					x[j] = wa2[j];
 					wa2[j] = diag[j] * x[j];
 				}
 				for (int i = 1; i <= *m; ++i)
 					fvec[i] = wa4[i];
-#endif
 				xnorm = enorm_(n, &wa2[1]);
 				fnorm = fnorm1;
 				++iter;

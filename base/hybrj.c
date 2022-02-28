@@ -1,7 +1,6 @@
 #include <float.h>
 #include <math.h>
-#include <stdlib.h>
-#include <assert.h>
+#include <stddef.h>
 
 #include "minpack.h"
 
@@ -222,55 +221,6 @@ void hybrj_(minpack_func_nj fcn, const int *n, double *x, double *fvec,
 				delta = *factor;
 		}
 
-#ifdef USE_LAPACK
-		double *tau = wa1;
-
-		/* query optimal size of work */
-		int lapack_info = 0;
-		int lwork = -1;
-		dgeqrf_(n, n, &fjac[fjac_offset], ldfjac, &tau[1], &tau[1], &lwork, &lapack_info);	// LAPACK
-		assert(lapack_info == 0);
-		lwork =	tau[1];
-		assert(lwork >= *n);
-	
-		/* alloc work area. TODO: move to start of function */
-		double *work = malloc(lwork * sizeof(*work));
-		assert(work != NULL);
-	
-		/* compute the QR factorization of the jacobian. */
-		dgeqrf_(n, n, &fjac[fjac_offset], ldfjac, &tau[1], work, &lwork, &lapack_info);	// LAPACK
-		assert(lapack_info == 0);
-
-		/* qtf <-- (Q transpose)*fvec */
-		for (int i = 1; i <= *n; ++i)
-			wa4[i] = fvec[i];
-		int c1 = 1;
-		dormqr_("Left", "Transpose", n, &c1, n, &fjac[fjac_offset], ldfjac, &tau[1], &wa4[1], n, work, &lwork, &lapack_info);
-		assert(lapack_info == 0);
-		
-		for (int j = 1; j <= *n; ++j)
-			qtf[j] = wa4[j];
-
-		/* copy the triangular factor of the QR factorization into R. */
-		int sing = 0;
-		for (int j = 1; j <= *n; ++j) {
-			int l = j;
-			for (int i = 1; i <= j - 1; ++i) {
-				r[l] = fjac[i + j * fjac_dim1];
-				l = l + *n - i;
-			}
-			r[l] = fjac[j + j * fjac_dim1];
-			if (r[l] == 0)
-				sing = 1;
-		}
-
-		/* accumulate the orthogonal factor in fjac. */
-		dorgqr_(n, n, n, &fjac[fjac_offset], ldfjac, &tau[1], work, &lwork, &lapack_info);
-		assert(lapack_info == 0);
-
-		/* TODO: move to fini */
-		free(work);
-#else
 		/* compute the qr factorization of the jacobian. */
 		int pivot = 0;
 		int c1 = 1;
@@ -302,9 +252,9 @@ void hybrj_(minpack_func_nj fcn, const int *n, double *x, double *fvec,
 			if (r[l] == 0)
 				sing = 1;
 		}
+
 		/* accumulate the orthogonal factor in fjac. */
 		qform_(n, n, &fjac[fjac_offset], ldfjac, &wa1[1]);
-#endif
 
 		/* rescale if necessary. */
 		if (*mode != 2)

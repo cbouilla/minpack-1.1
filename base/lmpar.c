@@ -111,23 +111,12 @@ void lmpar_(const int *n, double *r, const int *ldr, int *ipvt, double *diag,
 	int r_offset = 1 + r_dim1 * 1;
 	r -= r_dim1 + 1;
 
-	int c1 = 1;
-
 	/* dwarf is the smallest positive magnitude. */
 	double dwarf = DBL_MIN;
 
 	/* Compute and store in x the gauss-newton direction. If the
 	   jacobian is rank-deficient, obtain a least squares solution. */
 	int nsing = *n;
-#ifdef USE_BLAS_COPY
-	dcopy_(n, &qtb[1], &c1, &wa1[1], &c1);
-	for (int j = 1; j <= *n; ++j) {
-		if (r[j + j * r_dim1] == 0) {
-			nsing = j - 1;
-			break;
-		}
-	}
-#else
 	for (int j = 1; j <= *n; ++j) {
 		wa1[j] = qtb[j];
 		if (r[j + j * r_dim1] == 0) {
@@ -135,11 +124,7 @@ void lmpar_(const int *n, double *r, const int *ldr, int *ipvt, double *diag,
 			break;
 		}
 	}
-#endif
 
-#ifdef USE_BLAS_TRSV
-	dtrsv_("Up", "notrans", "nounit", &nsing, &r[r_offset], ldr, &wa1[1], &c1);
-#else
 	for (int k = 1; k <= nsing; ++k) {
 		int j = nsing - k + 1;
 		wa1[j] /= r[j + j * r_dim1];
@@ -147,7 +132,6 @@ void lmpar_(const int *n, double *r, const int *ldr, int *ipvt, double *diag,
 		for (int i = 1; i <= j - 1; ++i)
 			wa1[i] -= r[i + j * r_dim1] * temp;
 	}
-#endif
 	for (int j = 1; j <= *n; ++j) {
 		int l = ipvt[j];
 		x[l] = wa1[j];
@@ -173,16 +157,12 @@ void lmpar_(const int *n, double *r, const int *ldr, int *ipvt, double *diag,
 			int l = ipvt[j];
 			wa1[j] = diag[l] * (wa2[l] / dxnorm);
 		}
-#ifdef USE_BLAS_TRSV		
-		dtrsv_("Up", "trans", "nounit", &nsing, &r[r_offset], ldr, &wa1[1], &c1);
-#else
 		for (int j = 1; j <= *n; ++j) {
 			double sum = 0;
 			for (int i = 1; i <= j - 1; ++i)
 				sum += r[i + j * r_dim1] * wa1[i];
 			wa1[j] = (wa1[j] - sum) / r[j + j * r_dim1];
 		}
-#endif
 		double temp = enorm_(n, &wa1[1]);
 		parl = fp / *delta / temp / temp;
 	}

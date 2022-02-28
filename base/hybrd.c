@@ -1,52 +1,8 @@
-#include <f2c.h>
+#include <stddef.h>
+#include <math.h>
 #include <float.h>
 
 #include "minpack.h"
-
-/* Table of constant values */
-
-static integer c__1 = 1;
-static logical c_false = FALSE_;
-
-void hybrd_(minpack_func_n fcn, 
-          const int *n, double *x, double *fvec, const double *xtol, const int *maxfev,
-          const int *ml, const int *mu, const double *epsfcn, double *diag, const int *mode,
-          const double *factor, const int *nprint, int *info, int *nfev,
-          double *fjac, const int *ldfjac, double *r__, const int *lr, double *qtf,
-          double *wa1, double *wa2, double *wa3, double *wa4)
-{
-    /* Initialized data */
-
-    static doublereal one = 1.;
-    static doublereal p1 = .1;
-    static doublereal p5 = .5;
-    static doublereal p001 = .001;
-    static doublereal p0001 = 1e-4;
-    static doublereal zero = 0.;
-
-    /* System generated locals */
-    integer fjac_dim1, fjac_offset, i__1, i__2;
-    doublereal d__1, d__2;
-
-    /* Local variables */
-    static integer i__, j, l, jm1, iwa[1];
-    static doublereal sum;
-    static logical sing;
-    static integer iter;
-    static doublereal temp;
-    static integer msum, iflag;
-    static doublereal delta;
-    
-    static logical jeval;
-    static integer ncsuc;
-    static doublereal ratio;
-    static doublereal fnorm;
-    static doublereal pnorm, xnorm, fnorm1;
-    static integer nslow1, nslow2;
-    static integer ncfail;
-    static doublereal actred, epsmch, prered;
-    
-/*     ********** */
 
 /*     subroutine hybrd */
 
@@ -200,425 +156,283 @@ void hybrd_(minpack_func_n fcn,
 
 /*     argonne national laboratory. minpack project. march 1980. */
 /*     burton s. garbow, kenneth e. hillstrom, jorge j. more */
+void hybrd_(minpack_func_n fcn, 
+		  const int *n, double *x, double *fvec, const double *xtol, const int *maxfev,
+		  const int *ml, const int *mu, const double *epsfcn, double *diag, const int *mode,
+		  const double *factor, const int *nprint, int *info, int *nfev,
+		  double *fjac, const int *ldfjac, double *r, const int *lr, double *qtf,
+		  double *wa1, double *wa2, double *wa3, double *wa4)
+{
+	/* Parameter adjustments */
+	--wa4;
+	--wa3;
+	--wa2;
+	--wa1;
+	--qtf;
+	--diag;
+	--fvec;
+	--x;
+	int fjac_dim1 = *ldfjac;
+	int fjac_offset = 1 + fjac_dim1 * 1;
+	fjac -= fjac_offset;
+	--r;
 
-/*     ********** */
-    /* Parameter adjustments */
-    --wa4;
-    --wa3;
-    --wa2;
-    --wa1;
-    --qtf;
-    --diag;
-    --fvec;
-    --x;
-    fjac_dim1 = *ldfjac;
-    fjac_offset = 1 + fjac_dim1 * 1;
-    fjac -= fjac_offset;
-    --r__;
+	/* epsmch is the machine precision. */
+	double epsmch = DBL_EPSILON;
 
-    /* Function Body */
+	int msum = *ml + *mu + 1;
+	if (msum > *n)
+		msum = *n;
+	int iflag = 0;
+	*info = 0;
+	*nfev = 0;
 
-/*     epsmch is the machine precision. */
-
-    epsmch = DBL_EPSILON;
-
-    *info = 0;
-    iflag = 0;
-    *nfev = 0;
-
-/*     check the input parameters for errors. */
-
-    if (*n <= 0 || *xtol < zero || *maxfev <= 0 || *ml < 0 || *mu < 0 || *
-	    factor <= zero || *ldfjac < *n || *lr < *n * (*n + 1) / 2) {
-	goto L300;
-    }
-    if (*mode != 2) {
-	goto L20;
-    }
-    i__1 = *n;
-    for (j = 1; j <= i__1; ++j) {
-	if (diag[j] <= zero) {
-	    goto L300;
+	/* check the input parameters for errors. */
+	if (*n <= 0 || *ldfjac < *n || *xtol < 0 || *maxfev <= 0 || *factor <= 0 || *lr < *n * (*n + 1) / 2)
+		goto fini;
+	if (*mode == 2) {
+		for (int j = 1; j <= *n; ++j)
+			if (diag[j] <= 0)
+				goto fini;
 	}
-/* L10: */
-    }
-L20:
-
-/*     evaluate the function at the starting point */
-/*     and calculate its norm. */
-
-    iflag = 1;
-    (*fcn)(n, &x[1], &fvec[1], &iflag);
-    *nfev = 1;
-    if (iflag < 0) {
-	goto L300;
-    }
-    fnorm = enorm_(n, &fvec[1]);
-
-/*     determine the number of calls to fcn needed to compute */
-/*     the jacobian matrix. */
-
-/* Computing MIN */
-    i__1 = *ml + *mu + 1;
-    msum = min(i__1,*n);
-
-/*     initialize iteration counter and monitors. */
-
-    iter = 1;
-    ncsuc = 0;
-    ncfail = 0;
-    nslow1 = 0;
-    nslow2 = 0;
-
-/*     beginning of the outer loop. */
-
-L30:
-    jeval = TRUE_;
-
-/*        calculate the jacobian matrix. */
-
-    iflag = 2;
-    fdjac1_((S_fp)fcn, n, &x[1], &fvec[1], &fjac[fjac_offset], ldfjac, &iflag,
-	     ml, mu, epsfcn, &wa1[1], &wa2[1]);
-    *nfev += msum;
-    if (iflag < 0) {
-	goto L300;
-    }
-
-/*        compute the qr factorization of the jacobian. */
-
-    qrfac_(n, n, &fjac[fjac_offset], ldfjac, &c_false, iwa, &c__1, &wa1[1], &
-	    wa2[1], &wa3[1]);
-
-/*        on the first iteration and if mode is 1, scale according */
-/*        to the norms of the columns of the initial jacobian. */
-
-    if (iter != 1) {
-	goto L70;
-    }
-    if (*mode == 2) {
-	goto L50;
-    }
-    i__1 = *n;
-    for (j = 1; j <= i__1; ++j) {
-	diag[j] = wa2[j];
-	if (wa2[j] == zero) {
-	    diag[j] = one;
-	}
-/* L40: */
-    }
-L50:
-
-/*        on the first iteration, calculate the norm of the scaled x */
-/*        and initialize the step bound delta. */
-
-    i__1 = *n;
-    for (j = 1; j <= i__1; ++j) {
-	wa3[j] = diag[j] * x[j];
-/* L60: */
-    }
-    xnorm = enorm_(n, &wa3[1]);
-    delta = *factor * xnorm;
-    if (delta == zero) {
-	delta = *factor;
-    }
-L70:
-
-/*        form (q transpose)*fvec and store in qtf. */
-
-    i__1 = *n;
-    for (i__ = 1; i__ <= i__1; ++i__) {
-	qtf[i__] = fvec[i__];
-/* L80: */
-    }
-    i__1 = *n;
-    for (j = 1; j <= i__1; ++j) {
-	if (fjac[j + j * fjac_dim1] == zero) {
-	    goto L110;
-	}
-	sum = zero;
-	i__2 = *n;
-	for (i__ = j; i__ <= i__2; ++i__) {
-	    sum += fjac[i__ + j * fjac_dim1] * qtf[i__];
-/* L90: */
-	}
-	temp = -sum / fjac[j + j * fjac_dim1];
-	i__2 = *n;
-	for (i__ = j; i__ <= i__2; ++i__) {
-	    qtf[i__] += fjac[i__ + j * fjac_dim1] * temp;
-/* L100: */
-	}
-L110:
-/* L120: */
-	;
-    }
-
-/*        copy the triangular factor of the qr factorization into r. */
-
-    sing = FALSE_;
-    i__1 = *n;
-    for (j = 1; j <= i__1; ++j) {
-	l = j;
-	jm1 = j - 1;
-	if (jm1 < 1) {
-	    goto L140;
-	}
-	i__2 = jm1;
-	for (i__ = 1; i__ <= i__2; ++i__) {
-	    r__[l] = fjac[i__ + j * fjac_dim1];
-	    l = l + *n - i__;
-/* L130: */
-	}
-L140:
-	r__[l] = wa1[j];
-	if (wa1[j] == zero) {
-	    sing = TRUE_;
-	}
-/* L150: */
-    }
-
-/*        accumulate the orthogonal factor in fjac. */
-
-    qform_(n, n, &fjac[fjac_offset], ldfjac, &wa1[1]);
-
-/*        rescale if necessary. */
-
-    if (*mode == 2) {
-	goto L170;
-    }
-    i__1 = *n;
-    for (j = 1; j <= i__1; ++j) {
-/* Computing MAX */
-	d__1 = diag[j], d__2 = wa2[j];
-	diag[j] = max(d__1,d__2);
-/* L160: */
-    }
-L170:
-
-/*        beginning of the inner loop. */
-
-L180:
-
-/*           if requested, call fcn to enable printing of iterates. */
-
-    if (*nprint <= 0) {
-	goto L190;
-    }
-    iflag = 0;
-    if ((iter - 1) % *nprint == 0) {
-	(*fcn)(n, &x[1], &fvec[1], &iflag);
-    }
-    if (iflag < 0) {
-	goto L300;
-    }
-L190:
-
-/*           determine the direction p. */
-
-    dogleg_(n, &r__[1], lr, &diag[1], &qtf[1], &delta, &wa1[1], &wa2[1], &wa3[
-	    1]);
-
-/*           store the direction p and x + p. calculate the norm of p. */
-
-    i__1 = *n;
-    for (j = 1; j <= i__1; ++j) {
-	wa1[j] = -wa1[j];
-	wa2[j] = x[j] + wa1[j];
-	wa3[j] = diag[j] * wa1[j];
-/* L200: */
-    }
-    pnorm = enorm_(n, &wa3[1]);
-
-/*           on the first iteration, adjust the initial step bound. */
-
-    if (iter == 1) {
-	delta = min(delta,pnorm);
-    }
-
-/*           evaluate the function at x + p and calculate its norm. */
-
-    iflag = 1;
-    (*fcn)(n, &wa2[1], &wa4[1], &iflag);
-    ++(*nfev);
-    if (iflag < 0) {
-	goto L300;
-    }
-    fnorm1 = enorm_(n, &wa4[1]);
-
-/*           compute the scaled actual reduction. */
-
-    actred = -one;
-    if (fnorm1 < fnorm) {
-/* Computing 2nd power */
-	d__1 = fnorm1 / fnorm;
-	actred = one - d__1 * d__1;
-    }
-
-/*           compute the scaled predicted reduction. */
-
-    l = 1;
-    i__1 = *n;
-    for (i__ = 1; i__ <= i__1; ++i__) {
-	sum = zero;
-	i__2 = *n;
-	for (j = i__; j <= i__2; ++j) {
-	    sum += r__[l] * wa1[j];
-	    ++l;
-/* L210: */
-	}
-	wa3[i__] = qtf[i__] + sum;
-/* L220: */
-    }
-    temp = enorm_(n, &wa3[1]);
-    prered = zero;
-    if (temp < fnorm) {
-/* Computing 2nd power */
-	d__1 = temp / fnorm;
-	prered = one - d__1 * d__1;
-    }
-
-/*           compute the ratio of the actual to the predicted */
-/*           reduction. */
-
-    ratio = zero;
-    if (prered > zero) {
-	ratio = actred / prered;
-    }
-
-/*           update the step bound. */
-
-    if (ratio >= p1) {
-	goto L230;
-    }
-    ncsuc = 0;
-    ++ncfail;
-    delta = p5 * delta;
-    goto L240;
-L230:
-    ncfail = 0;
-    ++ncsuc;
-    if (ratio >= p5 || ncsuc > 1) {
-/* Computing MAX */
-	d__1 = delta, d__2 = pnorm / p5;
-	delta = max(d__1,d__2);
-    }
-    if ((d__1 = ratio - one, abs(d__1)) <= p1) {
-	delta = pnorm / p5;
-    }
-L240:
-
-/*           test for successful iteration. */
-
-    if (ratio < p0001) {
-	goto L260;
-    }
-
-/*           successful iteration. update x, fvec, and their norms. */
-
-    i__1 = *n;
-    for (j = 1; j <= i__1; ++j) {
-	x[j] = wa2[j];
-	wa2[j] = diag[j] * x[j];
-	fvec[j] = wa4[j];
-/* L250: */
-    }
-    xnorm = enorm_(n, &wa2[1]);
-    fnorm = fnorm1;
-    ++iter;
-L260:
-
-/*           determine the progress of the iteration. */
-
-    ++nslow1;
-    if (actred >= p001) {
-	nslow1 = 0;
-    }
-    if (jeval) {
-	++nslow2;
-    }
-    if (actred >= p1) {
-	nslow2 = 0;
-    }
-
-/*           test for convergence. */
-
-    if (delta <= *xtol * xnorm || fnorm == zero) {
-	*info = 1;
-    }
-    if (*info != 0) {
-	goto L300;
-    }
-
-/*           tests for termination and stringent tolerances. */
-
-    if (*nfev >= *maxfev) {
-	*info = 2;
-    }
-/* Computing MAX */
-    d__1 = p1 * delta;
-    if (p1 * max(d__1,pnorm) <= epsmch * xnorm) {
-	*info = 3;
-    }
-    if (nslow2 == 5) {
-	*info = 4;
-    }
-    if (nslow1 == 10) {
-	*info = 5;
-    }
-    if (*info != 0) {
-	goto L300;
-    }
-
-/*           criterion for recalculating jacobian approximation */
-/*           by forward differences. */
-
-    if (ncfail == 2) {
-	goto L290;
-    }
-
-/*           calculate the rank one modification to the jacobian */
-/*           and update qtf if necessary. */
-
-    i__1 = *n;
-    for (j = 1; j <= i__1; ++j) {
-	sum = zero;
-	i__2 = *n;
-	for (i__ = 1; i__ <= i__2; ++i__) {
-	    sum += fjac[i__ + j * fjac_dim1] * wa4[i__];
-/* L270: */
-	}
-	wa2[j] = (sum - wa3[j]) / pnorm;
-	wa1[j] = diag[j] * (diag[j] * wa1[j] / pnorm);
-	if (ratio >= p0001) {
-	    qtf[j] = sum;
-	}
-/* L280: */
-    }
-
-/*           compute the qr factorization of the updated jacobian. */
-
-    r1updt_(n, n, &r__[1], lr, &wa1[1], &wa2[1], &wa3[1], &sing);
-    r1mpyq_(n, n, &fjac[fjac_offset], ldfjac, &wa2[1], &wa3[1]);
-    r1mpyq_(&c__1, n, &qtf[1], &c__1, &wa2[1], &wa3[1]);
-
-/*           end of the inner loop. */
-
-    jeval = FALSE_;
-    goto L180;
-L290:
-
-/*        end of the outer loop. */
-
-    goto L30;
-L300:
-
-/*     termination, either normal or user imposed. */
-
-    if (iflag < 0) {
-	*info = iflag;
-    }
-    iflag = 0;
-    if (*nprint > 0) {
-	(*fcn)(n, &x[1], &fvec[1], &iflag);
-    }
+
+	/* evaluate the function at the starting point */
+	/* and calculate its norm. */
+	iflag = 1;
+	(*fcn) (n, &x[1], &fvec[1], &iflag);
+	*nfev = 1;
+	if (iflag < 0)
+		goto fini;
+	double fnorm = enorm_(n, &fvec[1]);
+
+	/* initialize iteration counter and monitors. */
+	int iter = 1;
+	int ncsuc = 0;
+	int ncfail = 0;
+	int nslow1 = 0;
+	int nslow2 = 0;
+
+	/* beginning of the outer loop. */
+	for (;;) {
+		int jeval = 1;
+
+		/* calculate the jacobian matrix. */
+		iflag = 2;
+    		fdjac1_(fcn, n, &x[1], &fvec[1], &fjac[fjac_offset], ldfjac, &iflag,
+			ml, mu, epsfcn, &wa1[1], &wa2[1]);
+		*nfev += msum;
+		if (iflag < 0)
+			goto fini;
+
+		/* on the first iteration and if mode is 1, scale according */
+		/* to the norms of the columns of the initial jacobian. */
+		double xnorm, delta;
+		if (iter == 1) {
+			if (*mode != 2)
+				for (int j = 1; j <= *n; ++j) {
+					diag[j] = wa2[j];
+					if (wa2[j] == 0)
+						diag[j] = 1;
+				}
+
+			/* on the first iteration, calculate the norm of the scaled x */
+			/* and initialize the step bound delta. */
+			for (int j = 1; j <= *n; ++j)
+				wa3[j] = diag[j] * x[j];
+			xnorm = enorm_(n, &wa3[1]);
+			delta = *factor * xnorm;
+			if (delta == 0)
+				delta = *factor;
+		}
+
+		/* compute the qr factorization of the jacobian. */
+		int pivot = 0;
+		int c1 = 1;
+		qrfac_(n, n, &fjac[fjac_offset], ldfjac, &pivot, NULL, &c1, &wa1[1], &wa2[1], &wa3[1]);
+
+		/* form (Q transpose)*fvec and store in qtf. */
+		for (int i = 1; i <= *n; ++i)
+			qtf[i] = fvec[i];
+		for (int j = 1; j <= *n; ++j) {
+			if (fjac[j + j * fjac_dim1] != 0) {
+				double sum = 0;
+				for (int i = j; i <= *n; ++i)
+					sum += fjac[i + j * fjac_dim1] * qtf[i];
+				double temp = -sum / fjac[j + j * fjac_dim1];
+				for (int i = j; i <= *n; ++i)
+					qtf[i] += fjac[i + j * fjac_dim1] * temp;
+			}
+		}
+		
+		/* copy the triangular factor of the QR factorization into R. */
+		int sing = 0;
+		for (int j = 1; j <= *n; ++j) {
+			int l = j;
+			for (int i = 1; i <= j - 1; ++i) {
+				r[l] = fjac[i + j * fjac_dim1];
+				l = l + *n - i;
+			}
+			r[l] = wa1[j];
+			if (r[l] == 0)
+				sing = 1;
+		}
+
+		/* accumulate the orthogonal factor in fjac. */
+		qform_(n, n, &fjac[fjac_offset], ldfjac, &wa1[1]);
+
+		/* rescale if necessary. */
+		if (*mode != 2)
+			for (int j = 1; j <= *n; ++j)
+				diag[j] = fmax(diag[j], wa2[j]);
+
+		/* beginning of the inner loop. */
+		for (;;) {
+
+			/* if requested, call fcn to enable printing of iterates. */
+			if (*nprint > 0) {
+				iflag = 0;
+				if ((iter - 1) % *nprint == 0)
+					(*fcn) (n, &x[1], &fvec[1], &iflag);
+				if (iflag < 0)
+					goto fini;
+			}
+
+			/* determine the direction p. */
+			dogleg_(n, &r[1], lr, &diag[1], &qtf[1], &delta, &wa1[1], &wa2[1], &wa3[1]);
+
+			/* store the direction p and x + p. calculate the norm of p. */
+			for (int j = 1; j <= *n; ++j) {
+				wa1[j] = -wa1[j];
+				wa2[j] = x[j] + wa1[j];
+				wa3[j] = diag[j] * wa1[j];
+			}
+			double pnorm = enorm_(n, &wa3[1]);
+
+			/* on the first iteration, adjust the initial step bound. */
+			if (iter == 1)
+				delta = fmin(delta, pnorm);
+
+			/* evaluate the function at x + p and calculate its norm. */
+			iflag = 1;
+			(*fcn) (n, &wa2[1], &wa4[1], &iflag);
+			*nfev += 1;
+			if (iflag < 0)
+				goto fini;
+			double fnorm1 = enorm_(n, &wa4[1]);
+
+			/* compute the scaled actual reduction. */
+			double actred = -1;
+			if (fnorm1 < fnorm) {
+				double d = fnorm1 / fnorm;
+				actred = 1 - d * d;
+			}
+
+			/* compute the scaled predicted reduction. */
+			int l = 1;
+			for (int i = 1; i <= *n; ++i) {
+				double sum = 0;
+				for (int j = i; j <= *n; ++j) {
+					sum += r[l] * wa1[j];
+					++l;
+				}
+				wa3[i] = qtf[i] + sum;
+			}
+			double temp = enorm_(n, &wa3[1]);
+			double prered = 0;
+			if (temp < fnorm) {
+				double d = temp / fnorm;
+				prered = 1 - d * d;
+			}
+
+			/* compute the ratio of the actual to the predicted reduction. */
+			double ratio = 0;
+			if (prered > 0)
+				ratio = actred / prered;
+
+			/* update the step bound. */
+			if (ratio < 0.1) {
+				ncsuc = 0;
+				++ncfail;
+				delta = 0.5 * delta;
+			} else {
+				ncfail = 0;
+				++ncsuc;
+				if (ratio >= 0.5 || ncsuc > 1)
+					delta = fmax(delta, pnorm / 0.5);
+				if (fabs(ratio - 1) <= 0.1)
+					delta = pnorm / 0.5;
+			}
+
+			/* test for successful iteration. */
+			if (ratio >= 0.0001) {
+				/* successful iteration. update x, fvec, and their norms. */
+				for (int j = 1; j <= *n; ++j) {
+					x[j] = wa2[j];
+					wa2[j] = diag[j] * x[j];
+					fvec[j] = wa4[j];
+				}
+				xnorm = enorm_(n, &wa2[1]);
+				fnorm = fnorm1;
+				++iter;
+			}
+
+			/* determine the progress of the iteration. */
+			++nslow1;
+			if (actred >= 0.001)
+				nslow1 = 0;
+			if (jeval)
+				++nslow2;
+			if (actred >= 0.1)
+				nslow2 = 0;
+
+			/* test for convergence. */
+			if (delta <= *xtol * xnorm || fnorm == 0)
+				*info = 1;
+			if (*info != 0)
+				goto fini;
+
+			/* tests for termination and stringent tolerances. */
+			if (*nfev >= *maxfev)
+				*info = 2;
+			if (0.1 * fmax(0.1 * delta, pnorm) <= epsmch * xnorm)
+				*info = 3;
+			if (nslow2 == 5)
+				*info = 4;
+			if (nslow1 == 10)
+				*info = 5;
+			if (*info != 0)
+				goto fini;
+
+			/* criterion for recalculating jacobian. */
+			if (ncfail == 2)
+				break;  /* exit the inner loop */
+
+			/* calculate the rank one modification to the jacobian */
+			/* and update qtf if necessary. */
+			for (int j = 1; j <= *n; ++j) {
+				double sum = 0;
+				for (int i = 1; i <= *n; ++i)
+					sum += fjac[i + j * fjac_dim1] * wa4[i];
+				wa2[j] = (sum - wa3[j]) / pnorm;
+				wa1[j] = diag[j] * (diag[j] * wa1[j] / pnorm);
+				if (ratio >= 0.0001)
+					qtf[j] = sum;
+			}
+
+			/* compute the QR factorization of the updated jacobian. */
+			int c1 = 1;
+			r1updt_(n, n, &r[1], lr, &wa1[1], &wa2[1], &wa3[1], &sing);
+			r1mpyq_(n, n, &fjac[fjac_offset], ldfjac, &wa2[1], &wa3[1]);
+			r1mpyq_(&c1, n, &qtf[1], &c1, &wa2[1], &wa3[1]);
+			jeval = 0;
+		}   /* inner loop. */
+	}   /* outer loop. */
+ 
+ fini:
+	/* termination, either normal or user imposed. */
+	if (iflag < 0)
+		*info = iflag;
+	iflag = 0;
+	if (*nprint > 0)
+		(*fcn) (n, &x[1], &fvec[1], &iflag);
 }

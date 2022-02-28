@@ -125,6 +125,10 @@ void chkder_(const int *m, const int *n, double *x,
 /***************************** internal MINPACK routines *****************************/
 double enorm_(const int *n, double const *x);
 
+void fdjac1_(minpack_func_n fcn, const int *n, double *x, double *fvec,
+	    double *fjac, const int *ldfjac, int *iflag, const int *ml,
+	    const int *mu, const double *epsfcn, double *wa1, double *wa2);
+
 void fdjac2_(minpack_func_mn fcn, const int *m, const int *n, double *x,
 	    double const *fvec, double *fjac, const int *ldfjac, int *iflag,
 	    const double *epsfcn, double *wa);

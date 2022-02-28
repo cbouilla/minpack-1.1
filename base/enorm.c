@@ -40,10 +40,6 @@
 
 double enorm_(const int *n, double const *x)
 {
-#ifdef USE_BLAS_NRM2
-	int incx = 1;
-	return dnrm2_(n, x, &incx);
-#else
    double rdwarf = 3.834e-20;
    double rgiant = 1.304e19;
 
@@ -101,5 +97,4 @@ double enorm_(const int *n, double const *x)
            return sqrt(x3max * (s2 / x3max + x3max * s3));
    }
    return x1max * sqrt(s1 + s2 / x1max / x1max);
-#endif // USE_BLAS
 }
