@@ -1,6 +1,7 @@
 void initpt(int n, double * x, int nprob, double factor);
 void vecfcn(int n, double * x, double * fvec, int nprob);
-int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob);
+void vecjac(int n, double *x, double *fjac, int ldfjac, int nprob);
+void errjac(int n, double *x, double *fjac, int ldfjac, int nprob);
 
 extern char * problem_name[];
 

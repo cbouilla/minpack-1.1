@@ -9,7 +9,8 @@ LDLIBS += $(shell pkg-config --libs blas lapack)
 
 OBJS = enorm.o qrfac.o qrsolv.o fdjac2.o fdjac1.o lmpar.o qform.o dogleg.o r1updt.o r1mpyq.o \
        lmdif1.o lmdif.o lmder.o lmder1.o \
-       hybrd.o hybrj.o hybrd1.o hybrj1.o
+       hybrd.o hybrj.o hybrd1.o hybrj1.o \
+       chkder.o
 
 $(OBJS): minpack.h
 

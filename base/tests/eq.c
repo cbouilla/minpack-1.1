@@ -132,10 +132,8 @@ void vecfcn(int n, double *x, double *fvec, int nprob)
 		/* Powell singular function. */
 		fvec[1] = x[1] + 10 * x[2];
 		fvec[2] = sqrt(5) * (x[3] - x[4]);
-		/* Computing 2nd power */
 		double a = x[2] - 2 * x[3];
 		fvec[3] = a * a;
-		/* Computing 2nd power */
 		double b = x[1] - x[4];
 		fvec[4] = sqrt(10) * (b * b);
 		break;
@@ -157,6 +155,7 @@ void vecfcn(int n, double *x, double *fvec, int nprob)
 		break;
 
 	case 5:
+		/* HELICAL VALLEY FUNCTION. */
 		double twopi = 2 * M_PI;
 		double tmp1 = x[2] < 0 ? -0.25 : 0.25;
 		if (x[1] > 0)
@@ -474,7 +473,7 @@ void initpt(int n, double *x, int nprob, double factor)
  *       nprob is a positive int variable which defines the
  *         number of the problem.  nprob must not exceed 14.
  */
-int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
+void vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 {
 	/* Initialized data */
 
@@ -498,7 +497,7 @@ int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 	static double ten = 10.;
 
 	/* System generated locals */
-	int fjac_dim1, fjac_offset, i__1, i__2, i__3, i__4;
+	int fjac_offset, i__1, i__2, i__3, i__4;
 	double d__1, d__2;
 
 	/* Local variables */
@@ -510,8 +509,8 @@ int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 
 	/* Parameter adjustments */
 	--x;
-	fjac_dim1 = ldfjac;
-	fjac_offset = 1 + fjac_dim1;
+	ldfjac = ldfjac;
+	fjac_offset = 1 + ldfjac;
 	fjac -= fjac_offset;
 
 	/* Function Body */
@@ -520,7 +519,12 @@ int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 
 	switch (nprob) {
 	case 1:
-		goto L10;
+		/*     ROSENBROCK FUNCTION. */
+		fjac[ldfjac + 1] = -one;
+		fjac[(ldfjac << 1) + 1] = zero;
+		fjac[ldfjac + 2] = -twenty * x[1];
+		fjac[(ldfjac << 1) + 2] = ten;
+		break;
 	case 2:
 		goto L20;
 	case 3:
@@ -549,13 +553,8 @@ int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 		goto L450;
 	}
 
-/*     ROSENBROCK FUNCTION. */
 
  L10:
-	fjac[fjac_dim1 + 1] = -one;
-	fjac[(fjac_dim1 << 1) + 1] = zero;
-	fjac[fjac_dim1 + 2] = -twenty * x[1];
-	fjac[(fjac_dim1 << 1) + 2] = ten;
 	goto L490;
 
 /*     POWELL SINGULAR FUNCTION. */
@@ -563,28 +562,28 @@ int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
  L20:
 	for (k = 1; k <= 4; ++k) {
 		for (j = 1; j <= 4; ++j) {
-			fjac[k + j * fjac_dim1] = zero;
+			fjac[k + j * ldfjac] = zero;
 /* L30: */
 		}
 /* L40: */
 	}
-	fjac[fjac_dim1 + 1] = one;
-	fjac[(fjac_dim1 << 1) + 1] = ten;
-	fjac[fjac_dim1 * 3 + 2] = sqrt(five);
-	fjac[(fjac_dim1 << 2) + 2] = -fjac[fjac_dim1 * 3 + 2];
-	fjac[(fjac_dim1 << 1) + 3] = two * (x[2] - two * x[3]);
-	fjac[fjac_dim1 * 3 + 3] = -two * fjac[(fjac_dim1 << 1) + 3];
-	fjac[fjac_dim1 + 4] = two * sqrt(ten) * (x[1] - x[4]);
-	fjac[(fjac_dim1 << 2) + 4] = -fjac[fjac_dim1 + 4];
+	fjac[ldfjac + 1] = one;
+	fjac[(ldfjac << 1) + 1] = ten;
+	fjac[ldfjac * 3 + 2] = sqrt(five);
+	fjac[(ldfjac << 2) + 2] = -fjac[ldfjac * 3 + 2];
+	fjac[(ldfjac << 1) + 3] = two * (x[2] - two * x[3]);
+	fjac[ldfjac * 3 + 3] = -two * fjac[(ldfjac << 1) + 3];
+	fjac[ldfjac + 4] = two * sqrt(ten) * (x[1] - x[4]);
+	fjac[(ldfjac << 2) + 4] = -fjac[ldfjac + 4];
 	goto L490;
 
 /*     POWELL BADLY SCALED FUNCTION. */
 
  L50:
-	fjac[fjac_dim1 + 1] = c1 * x[2];
-	fjac[(fjac_dim1 << 1) + 1] = c1 * x[1];
-	fjac[fjac_dim1 + 2] = -exp(-x[1]);
-	fjac[(fjac_dim1 << 1) + 2] = -exp(-x[2]);
+	fjac[ldfjac + 1] = c1 * x[2];
+	fjac[(ldfjac << 1) + 1] = c1 * x[1];
+	fjac[ldfjac + 2] = -exp(-x[1]);
+	fjac[(ldfjac << 1) + 2] = -exp(-x[2]);
 	goto L490;
 
 /*     WOOD FUNCTION. */
@@ -592,7 +591,7 @@ int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
  L60:
 	for (k = 1; k <= 4; ++k) {
 		for (j = 1; j <= 4; ++j) {
-			fjac[k + j * fjac_dim1] = zero;
+			fjac[k + j * ldfjac] = zero;
 /* L70: */
 		}
 /* L80: */
@@ -603,16 +602,16 @@ int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 /* Computing 2nd power */
 	d__1 = x[3];
 	temp2 = x[4] - three * (d__1 * d__1);
-	fjac[fjac_dim1 + 1] = -c3 * temp1 + one;
-	fjac[(fjac_dim1 << 1) + 1] = -c3 * x[1];
-	fjac[fjac_dim1 + 2] = -two * c3 * x[1];
-	fjac[(fjac_dim1 << 1) + 2] = c3 + c4;
-	fjac[(fjac_dim1 << 2) + 2] = c5;
-	fjac[fjac_dim1 * 3 + 3] = -c6 * temp2 + one;
-	fjac[(fjac_dim1 << 2) + 3] = -c6 * x[3];
-	fjac[(fjac_dim1 << 1) + 4] = c5;
-	fjac[fjac_dim1 * 3 + 4] = -two * c6 * x[3];
-	fjac[(fjac_dim1 << 2) + 4] = c6 + c4;
+	fjac[ldfjac + 1] = -c3 * temp1 + one;
+	fjac[(ldfjac << 1) + 1] = -c3 * x[1];
+	fjac[ldfjac + 2] = -two * c3 * x[1];
+	fjac[(ldfjac << 1) + 2] = c3 + c4;
+	fjac[(ldfjac << 2) + 2] = c5;
+	fjac[ldfjac * 3 + 3] = -c6 * temp2 + one;
+	fjac[(ldfjac << 2) + 3] = -c6 * x[3];
+	fjac[(ldfjac << 1) + 4] = c5;
+	fjac[ldfjac * 3 + 4] = -two * c6 * x[3];
+	fjac[(ldfjac << 2) + 4] = c6 + c4;
 	goto L490;
 
 /*     HELICAL VALLEY FUNCTION. */
@@ -626,15 +625,15 @@ int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 	temp = d__1 * d__1 + d__2 * d__2;
 	temp1 = tpi * temp;
 	temp2 = sqrt(temp);
-	fjac[fjac_dim1 + 1] = hundrd * x[2] / temp1;
-	fjac[(fjac_dim1 << 1) + 1] = -hundrd * x[1] / temp1;
-	fjac[fjac_dim1 * 3 + 1] = ten;
-	fjac[fjac_dim1 + 2] = ten * x[1] / temp2;
-	fjac[(fjac_dim1 << 1) + 2] = ten * x[2] / temp2;
-	fjac[fjac_dim1 * 3 + 2] = zero;
-	fjac[fjac_dim1 + 3] = zero;
-	fjac[(fjac_dim1 << 1) + 3] = zero;
-	fjac[fjac_dim1 * 3 + 3] = one;
+	fjac[ldfjac + 1] = hundrd * x[2] / temp1;
+	fjac[(ldfjac << 1) + 1] = -hundrd * x[1] / temp1;
+	fjac[ldfjac * 3 + 1] = ten;
+	fjac[ldfjac + 2] = ten * x[1] / temp2;
+	fjac[(ldfjac << 1) + 2] = ten * x[2] / temp2;
+	fjac[ldfjac * 3 + 2] = zero;
+	fjac[ldfjac + 3] = zero;
+	fjac[(ldfjac << 1) + 3] = zero;
+	fjac[ldfjac * 3 + 3] = one;
 	goto L490;
 
 /*     WATSON FUNCTION. */
@@ -644,7 +643,7 @@ int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 	for (k = 1; k <= i__1; ++k) {
 		i__2 = n;
 		for (j = k; j <= i__2; ++j) {
-			fjac[k + j * fjac_dim1] = zero;
+			fjac[k + j * ldfjac] = zero;
 /* L110: */
 		}
 /* L120: */
@@ -683,7 +682,7 @@ int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 			for (j = k; j <= i__2; ++j) {
 				i__3 = k - 1;
 				i__4 = j - 1;
-				fjac[k + j * fjac_dim1] += tj * (((double)i__3 / ti - temp2) * ((double)i__4 / ti - temp2) - temp1);
+				fjac[k + j * ldfjac] += tj * (((double)i__3 / ti - temp2) * ((double)i__4 / ti - temp2) - temp1);
 				tj = ti * tj;
 /* L150: */
 			}
@@ -694,14 +693,14 @@ int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 	}
 /* Computing 2nd power */
 	d__1 = x[1];
-	fjac[fjac_dim1 + 1] = fjac[fjac_dim1 + 1] + six * (d__1 * d__1) - two * x[2] + three;
-	fjac[(fjac_dim1 << 1) + 1] -= two * x[1];
-	fjac[(fjac_dim1 << 1) + 2] += one;
+	fjac[ldfjac + 1] = fjac[ldfjac + 1] + six * (d__1 * d__1) - two * x[2] + three;
+	fjac[(ldfjac << 1) + 1] -= two * x[1];
+	fjac[(ldfjac << 1) + 2] += one;
 	i__1 = n;
 	for (k = 1; k <= i__1; ++k) {
 		i__2 = n;
 		for (j = k; j <= i__2; ++j) {
-			fjac[j + k * fjac_dim1] = fjac[k + j * fjac_dim1];
+			fjac[j + k * ldfjac] = fjac[k + j * ldfjac];
 /* L180: */
 		}
 /* L190: */
@@ -721,7 +720,7 @@ int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 		temp4 = two;
 		i__2 = n;
 		for (k = 1; k <= i__2; ++k) {
-			fjac[k + j * fjac_dim1] = tk * temp4;
+			fjac[k + j * ldfjac] = tk * temp4;
 			ti = four * temp2 + temp * temp4 - temp3;
 			temp3 = temp4;
 			temp4 = ti;
@@ -743,10 +742,10 @@ int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 		prod = x[j] * prod;
 		i__2 = n;
 		for (k = 1; k <= i__2; ++k) {
-			fjac[k + j * fjac_dim1] = one;
+			fjac[k + j * ldfjac] = one;
 /* L240: */
 		}
-		fjac[j + j * fjac_dim1] = two;
+		fjac[j + j * ldfjac] = two;
 /* L250: */
 	}
 	i__1 = n;
@@ -765,7 +764,7 @@ int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 /* L260: */
 		}
  L270:
-		fjac[n + j * fjac_dim1] = prod / temp;
+		fjac[n + j * ldfjac] = prod / temp;
 /* L280: */
 	}
 	goto L490;
@@ -782,17 +781,17 @@ int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 		temp = three * (d__1 * d__1);
 		i__2 = n;
 		for (j = 1; j <= i__2; ++j) {
-			fjac[k + j * fjac_dim1] = zero;
+			fjac[k + j * ldfjac] = zero;
 /* L300: */
 		}
 /* Computing 2nd power */
 		d__1 = h__;
-		fjac[k + k * fjac_dim1] = two + temp * (d__1 * d__1) / two;
+		fjac[k + k * ldfjac] = two + temp * (d__1 * d__1) / two;
 		if (k != 1) {
-			fjac[k + (k - 1) * fjac_dim1] = -one;
+			fjac[k + (k - 1) * ldfjac] = -one;
 		}
 		if (k != n) {
-			fjac[k + (k + 1) * fjac_dim1] = -one;
+			fjac[k + (k + 1) * ldfjac] = -one;
 		}
 /* L310: */
 	}
@@ -814,10 +813,10 @@ int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 			temp = three * (d__1 * d__1);
 /* Computing MIN */
 			d__1 = tj * (one - tk), d__2 = tk * (one - tj);
-			fjac[k + j * fjac_dim1] = h__ * min(d__1, d__2) * temp / two;
+			fjac[k + j * ldfjac] = h__ * min(d__1, d__2) * temp / two;
 /* L330: */
 		}
-		fjac[k + k * fjac_dim1] += one;
+		fjac[k + k * ldfjac] += one;
 /* L340: */
 	}
 	goto L490;
@@ -830,11 +829,11 @@ int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 		temp = sin(x[j]);
 		i__2 = n;
 		for (k = 1; k <= i__2; ++k) {
-			fjac[k + j * fjac_dim1] = temp;
+			fjac[k + j * ldfjac] = temp;
 /* L360: */
 		}
 		i__2 = j + 1;
-		fjac[j + j * fjac_dim1] = (double)i__2 *temp - cos(x[j]);
+		fjac[j + j * ldfjac] = (double)i__2 *temp - cos(x[j]);
 /* L370: */
 	}
 	goto L490;
@@ -856,11 +855,11 @@ int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 		i__2 = n;
 		for (j = k; j <= i__2; ++j) {
 			i__3 = k * j;
-			fjac[k + j * fjac_dim1] = (double)i__3 *temp;
-			fjac[j + k * fjac_dim1] = fjac[k + j * fjac_dim1];
+			fjac[k + j * ldfjac] = (double)i__3 *temp;
+			fjac[j + k * ldfjac] = fjac[k + j * ldfjac];
 /* L400: */
 		}
-		fjac[k + k * fjac_dim1] += one;
+		fjac[k + k * ldfjac] += one;
 /* L410: */
 	}
 	goto L490;
@@ -872,15 +871,15 @@ int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 	for (k = 1; k <= i__1; ++k) {
 		i__2 = n;
 		for (j = 1; j <= i__2; ++j) {
-			fjac[k + j * fjac_dim1] = zero;
+			fjac[k + j * ldfjac] = zero;
 /* L430: */
 		}
-		fjac[k + k * fjac_dim1] = three - four * x[k];
+		fjac[k + k * ldfjac] = three - four * x[k];
 		if (k != 1) {
-			fjac[k + (k - 1) * fjac_dim1] = -one;
+			fjac[k + (k - 1) * ldfjac] = -one;
 		}
 		if (k != n) {
-			fjac[k + (k + 1) * fjac_dim1] = -two;
+			fjac[k + (k + 1) * ldfjac] = -two;
 		}
 /* L440: */
 	}
@@ -895,7 +894,7 @@ int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 	for (k = 1; k <= i__1; ++k) {
 		i__2 = n;
 		for (j = 1; j <= i__2; ++j) {
-			fjac[k + j * fjac_dim1] = zero;
+			fjac[k + j * ldfjac] = zero;
 /* L460: */
 		}
 /* Computing MAX */
@@ -907,15 +906,492 @@ int vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 		i__2 = k2;
 		for (j = k1; j <= i__2; ++j) {
 			if (j != k) {
-				fjac[k + j * fjac_dim1] = -(one + two * x[j]);
+				fjac[k + j * ldfjac] = -(one + two * x[j]);
 			}
 /* L470: */
 		}
 /* Computing 2nd power */
 		d__1 = x[k];
-		fjac[k + k * fjac_dim1] = two + fiftn * (d__1 * d__1);
+		fjac[k + k * ldfjac] = two + fiftn * (d__1 * d__1);
 /* L480: */
 	}
  L490:
-	return 0;
+}
+
+ /*
+ *     subroutine errjac 
+ *
+ *     this subroutine is derived from vecjac which defines the 
+ *     jacobian matrices of fourteen test functions. the problem 
+ *     dimensions are as described in the prologue comments of vecfcn. 
+ *     various errors are deliberately introduced to provide a test 
+ *     for chkder. 
+ *
+ *     the subroutine statement is 
+ *
+ *       subroutine errjac(n,x,fjac,ldfjac,nprob) 
+ *
+ *     where 
+ *
+ *       n is a positive integer variable. 
+ *
+ *       x is an array of length n. 
+ *
+ *       fjac is an n by n array. on output fjac contains the 
+ *         jacobian matrix, with various errors deliberately 
+ *         introduced, of the nprob function evaluated at x. 
+ *
+ *       ldfjac is a positive integer variable not less than n 
+ *         which specifies the leading dimension of the array fjac. 
+ *
+ *       nprob is a positive integer variable which defines the 
+ *         number of the problem. nprob must not exceed 14. 
+ *
+ *     subprograms called 
+ *
+ *       fortran-supplied ... datan,dcos,dexp,dmin1,dsin,dsqrt, 
+ *                            max0,min0 
+ *
+ *     argonne national laboratory. minpack project. march 1980. 
+ *     burton s. garbow, kenneth e. hillstrom, jorge j. more 
+ */
+void errjac(int n, double *x, double *fjac, int ldfjac, int nprob)
+{
+    /* Initialized data */
+    static double zero = 0.;
+    static double one = 1.;
+    static double two = 2.;
+    static double three = 3.;
+    static double four = 4.;
+    static double five = 5.;
+    static double six = 6.;
+    static double eight = 8.;
+    static double ten = 10.;
+    static double fiftn = 15.;
+    static double twenty = 20.;
+    static double hundrd = 100.;
+    static double c1 = 1e4;
+    static double c3 = 200.;
+    static double c4 = 20.2;
+    static double c5 = 19.8;
+    static double c6 = 180.;
+    static double c9 = 29.;
+
+    /* System generated locals */
+    int fjac_offset, i__1, i__2, i__3, i__4;
+    double d__1, d__2;
+
+    /* Local variables */
+    static double h__;
+    static int i__, j, k, k1, k2, ml;
+    static double ti, tj, tk;
+    static int mu;
+    static double tpi, sum, sum1, sum2, prod, temp, temp1, temp2, temp3, 
+	    temp4;
+
+    /* Parameter adjustments */
+    --x;
+    fjac_offset = 1 + ldfjac;
+    fjac -= fjac_offset;
+
+    /* Function Body */
+
+/*     JACOBIAN ROUTINE SELECTOR. */
+
+    switch (nprob) {
+	case 1:  goto L10;
+	case 2:  goto L20;
+	case 3:  goto L50;
+	case 4:  goto L60;
+	case 5:  goto L90;
+	case 6:  goto L100;
+	case 7:  goto L200;
+	case 8:  goto L230;
+	case 9:  goto L290;
+	case 10:  goto L320;
+	case 11:  goto L350;
+	case 12:  goto L380;
+	case 13:  goto L420;
+	case 14:  goto L450;
+    }
+
+/*     ROSENBROCK FUNCTION WITH SIGN REVERSAL AFFECTING ELEMENT (1,1). */
+
+L10:
+    fjac[ldfjac + 1] = one;
+    fjac[(ldfjac << 1) + 1] = zero;
+    fjac[ldfjac + 2] = -twenty * x[1];
+    fjac[(ldfjac << 1) + 2] = ten;
+    goto L490;
+
+/*     POWELL SINGULAR FUNCTION WITH SIGN REVERSAL AFFECTING ELEMENT */
+/*     (3,3). */
+
+L20:
+    for (k = 1; k <= 4; ++k) {
+	for (j = 1; j <= 4; ++j) {
+	    fjac[k + j * ldfjac] = zero;
+/* L30: */
+	}
+/* L40: */
+    }
+    fjac[ldfjac + 1] = one;
+    fjac[(ldfjac << 1) + 1] = ten;
+    fjac[ldfjac * 3 + 2] = sqrt(five);
+    fjac[(ldfjac << 2) + 2] = -fjac[ldfjac * 3 + 2];
+    fjac[(ldfjac << 1) + 3] = two * (x[2] - two * x[3]);
+    fjac[ldfjac * 3 + 3] = two * fjac[(ldfjac << 1) + 3];
+    fjac[ldfjac + 4] = two * sqrt(ten) * (x[1] - x[4]);
+    fjac[(ldfjac << 2) + 4] = -fjac[ldfjac + 4];
+    goto L490;
+
+/*     POWELL BADLY SCALED FUNCTION WITH THE SIGN OF THE JACOBIAN */
+/*     REVERSED. */
+
+L50:
+    fjac[ldfjac + 1] = -c1 * x[2];
+    fjac[(ldfjac << 1) + 1] = -c1 * x[1];
+    fjac[ldfjac + 2] = exp(-x[1]);
+    fjac[(ldfjac << 1) + 2] = exp(-x[2]);
+    goto L490;
+
+/*     WOOD FUNCTION WITHOUT ERROR. */
+
+L60:
+    for (k = 1; k <= 4; ++k) {
+	for (j = 1; j <= 4; ++j) {
+	    fjac[k + j * ldfjac] = zero;
+/* L70: */
+	}
+/* L80: */
+    }
+/* Computing 2nd power */
+    d__1 = x[1];
+    temp1 = x[2] - three * (d__1 * d__1);
+/* Computing 2nd power */
+    d__1 = x[3];
+    temp2 = x[4] - three * (d__1 * d__1);
+    fjac[ldfjac + 1] = -c3 * temp1 + one;
+    fjac[(ldfjac << 1) + 1] = -c3 * x[1];
+    fjac[ldfjac + 2] = -two * c3 * x[1];
+    fjac[(ldfjac << 1) + 2] = c3 + c4;
+    fjac[(ldfjac << 2) + 2] = c5;
+    fjac[ldfjac * 3 + 3] = -c6 * temp2 + one;
+    fjac[(ldfjac << 2) + 3] = -c6 * x[3];
+    fjac[(ldfjac << 1) + 4] = c5;
+    fjac[ldfjac * 3 + 4] = -two * c6 * x[3];
+    fjac[(ldfjac << 2) + 4] = c6 + c4;
+    goto L490;
+
+/*     HELICAL VALLEY FUNCTION WITH MULTIPLICATIVE ERROR AFFECTING */
+/*     ELEMENTS (2,1) AND (2,2). */
+
+L90:
+    tpi = eight * atan(one);
+/* Computing 2nd power */
+    d__1 = x[1];
+/* Computing 2nd power */
+    d__2 = x[2];
+    temp = d__1 * d__1 + d__2 * d__2;
+    temp1 = tpi * temp;
+    temp2 = sqrt(temp);
+    fjac[ldfjac + 1] = hundrd * x[2] / temp1;
+    fjac[(ldfjac << 1) + 1] = -hundrd * x[1] / temp1;
+    fjac[ldfjac * 3 + 1] = ten;
+    fjac[ldfjac + 2] = five * x[1] / temp2;
+    fjac[(ldfjac << 1) + 2] = five * x[2] / temp2;
+    fjac[ldfjac * 3 + 2] = zero;
+    fjac[ldfjac + 3] = zero;
+    fjac[(ldfjac << 1) + 3] = zero;
+    fjac[ldfjac * 3 + 3] = one;
+    goto L490;
+
+/*     WATSON FUNCTION WITH SIGN REVERSALS AFFECTING THE COMPUTATION OF */
+/*     TEMP1. */
+
+L100:
+    i__1 = n;
+    for (k = 1; k <= i__1; ++k) {
+	i__2 = n;
+	for (j = k; j <= i__2; ++j) {
+	    fjac[k + j * ldfjac] = zero;
+/* L110: */
+	}
+/* L120: */
+    }
+    for (i__ = 1; i__ <= 29; ++i__) {
+	ti = (double) i__ / c9;
+	sum1 = zero;
+	temp = one;
+	i__1 = n;
+	for (j = 2; j <= i__1; ++j) {
+	    i__2 = j - 1;
+	    sum1 += (double) i__2 * temp * x[j];
+	    temp = ti * temp;
+/* L130: */
+	}
+	sum2 = zero;
+	temp = one;
+	i__1 = n;
+	for (j = 1; j <= i__1; ++j) {
+	    sum2 += temp * x[j];
+	    temp = ti * temp;
+/* L140: */
+	}
+/* Computing 2nd power */
+	d__1 = sum2;
+	temp1 = two * (sum1 + d__1 * d__1 + one);
+	temp2 = two * sum2;
+/* Computing 2nd power */
+	d__1 = ti;
+	temp = d__1 * d__1;
+	tk = one;
+	i__1 = n;
+	for (k = 1; k <= i__1; ++k) {
+	    tj = tk;
+	    i__2 = n;
+	    for (j = k; j <= i__2; ++j) {
+		i__3 = k - 1;
+		i__4 = j - 1;
+		fjac[k + j * ldfjac] += tj * (((double) i__3 / ti - 
+			temp2) * ((double) i__4 / ti - temp2) - temp1);
+		tj = ti * tj;
+/* L150: */
+	    }
+	    tk = temp * tk;
+/* L160: */
+	}
+/* L170: */
+    }
+/* Computing 2nd power */
+    d__1 = x[1];
+    fjac[ldfjac + 1] = fjac[ldfjac + 1] + six * (d__1 * d__1) - two * x[
+	    2] + three;
+    fjac[(ldfjac << 1) + 1] -= two * x[1];
+    fjac[(ldfjac << 1) + 2] += one;
+    i__1 = n;
+    for (k = 1; k <= i__1; ++k) {
+	i__2 = n;
+	for (j = k; j <= i__2; ++j) {
+	    fjac[j + k * ldfjac] = fjac[k + j * ldfjac];
+/* L180: */
+	}
+/* L190: */
+    }
+    goto L490;
+
+/*     CHEBYQUAD FUNCTION WITH JACOBIAN TWICE CORRECT SIZE. */
+
+L200:
+    tk = one / (double) (n);
+    i__1 = n;
+    for (j = 1; j <= i__1; ++j) {
+	temp1 = one;
+	temp2 = two * x[j] - one;
+	temp = two * temp2;
+	temp3 = zero;
+	temp4 = two;
+	i__2 = n;
+	for (k = 1; k <= i__2; ++k) {
+	    fjac[k + j * ldfjac] = two * tk * temp4;
+	    ti = four * temp2 + temp * temp4 - temp3;
+	    temp3 = temp4;
+	    temp4 = ti;
+	    ti = temp * temp2 - temp1;
+	    temp1 = temp2;
+	    temp2 = ti;
+/* L210: */
+	}
+/* L220: */
+    }
+    goto L490;
+
+/*     BROWN ALMOST-LINEAR FUNCTION WITHOUT ERROR. */
+
+L230:
+    prod = one;
+    i__1 = n;
+    for (j = 1; j <= i__1; ++j) {
+	prod = x[j] * prod;
+	i__2 = n;
+	for (k = 1; k <= i__2; ++k) {
+	    fjac[k + j * ldfjac] = one;
+/* L240: */
+	}
+	fjac[j + j * ldfjac] = two;
+/* L250: */
+    }
+    i__1 = n;
+    for (j = 1; j <= i__1; ++j) {
+	temp = x[j];
+	if (temp != zero) {
+	    goto L270;
+	}
+	temp = one;
+	prod = one;
+	i__2 = n;
+	for (k = 1; k <= i__2; ++k) {
+	    if (k != j) {
+		prod = x[k] * prod;
+	    }
+/* L260: */
+	}
+L270:
+	fjac[n + j * ldfjac] = prod / temp;
+/* L280: */
+    }
+    goto L490;
+
+/*     DISCRETE BOUNDARY VALUE FUNCTION WITH MULTIPLICATIVE ERROR */
+/*     AFFECTING THE JACOBIAN DIAGONAL. */
+
+L290:
+    i__1 = n + 1;
+    h__ = one / (double) i__1;
+    i__1 = n;
+    for (k = 1; k <= i__1; ++k) {
+/* Computing 2nd power */
+	d__1 = x[k] + (double) k * h__ + one;
+	temp = three * (d__1 * d__1);
+	i__2 = n;
+	for (j = 1; j <= i__2; ++j) {
+	    fjac[k + j * ldfjac] = zero;
+/* L300: */
+	}
+/* Computing 2nd power */
+	d__1 = h__;
+	fjac[k + k * ldfjac] = four + temp * (d__1 * d__1);
+	if (k != 1) {
+	    fjac[k + (k - 1) * ldfjac] = -one;
+	}
+	if (k != n) {
+	    fjac[k + (k + 1) * ldfjac] = -one;
+	}
+/* L310: */
+    }
+    goto L490;
+
+/*     DISCRETE INTEGRAL EQUATION FUNCTION WITH SIGN ERROR AFFECTING */
+/*     THE JACOBIAN DIAGONAL. */
+
+L320:
+    i__1 = n + 1;
+    h__ = one / (double) i__1;
+    i__1 = n;
+    for (k = 1; k <= i__1; ++k) {
+	tk = (double) k * h__;
+	i__2 = n;
+	for (j = 1; j <= i__2; ++j) {
+	    tj = (double) j * h__;
+/* Computing 2nd power */
+	    d__1 = x[j] + tj + one;
+	    temp = three * (d__1 * d__1);
+/* Computing MIN */
+	    d__1 = tj * (one - tk), d__2 = tk * (one - tj);
+	    fjac[k + j * ldfjac] = h__ * min(d__1,d__2) * temp / two;
+/* L330: */
+	}
+	fjac[k + k * ldfjac] -= one;
+/* L340: */
+    }
+    goto L490;
+
+/*     TRIGONOMETRIC FUNCTION WITH SIGN ERRORS AFFECTING THE */
+/*     OFFDIAGONAL ELEMENTS OF THE JACOBIAN. */
+
+L350:
+    i__1 = n;
+    for (j = 1; j <= i__1; ++j) {
+	temp = sin(x[j]);
+	i__2 = n;
+	for (k = 1; k <= i__2; ++k) {
+	    fjac[k + j * ldfjac] = -temp;
+/* L360: */
+	}
+	i__2 = j + 1;
+	fjac[j + j * ldfjac] = (double) i__2 * temp - cos(x[j]);
+/* L370: */
+    }
+    goto L490;
+
+/*     VARIABLY DIMENSIONED FUNCTION WITH OPERATION ERROR AFFECTING */
+/*     THE UPPER TRIANGULAR ELEMENTS OF THE JACOBIAN. */
+
+L380:
+    sum = zero;
+    i__1 = n;
+    for (j = 1; j <= i__1; ++j) {
+	sum += (double) j * (x[j] - one);
+/* L390: */
+    }
+/* Computing 2nd power */
+    d__1 = sum;
+    temp = one + six * (d__1 * d__1);
+    i__1 = n;
+    for (k = 1; k <= i__1; ++k) {
+	i__2 = n;
+	for (j = k; j <= i__2; ++j) {
+	    i__3 = k * j;
+	    fjac[k + j * ldfjac] = (double) i__3 / temp;
+	    fjac[j + k * ldfjac] = fjac[k + j * ldfjac];
+/* L400: */
+	}
+	fjac[k + k * ldfjac] += one;
+/* L410: */
+    }
+    goto L490;
+
+/*     BROYDEN TRIDIAGONAL FUNCTION WITHOUT ERROR. */
+
+L420:
+    i__1 = n;
+    for (k = 1; k <= i__1; ++k) {
+	i__2 = n;
+	for (j = 1; j <= i__2; ++j) {
+	    fjac[k + j * ldfjac] = zero;
+/* L430: */
+	}
+	fjac[k + k * ldfjac] = three - four * x[k];
+	if (k != 1) {
+	    fjac[k + (k - 1) * ldfjac] = -one;
+	}
+	if (k != n) {
+	    fjac[k + (k + 1) * ldfjac] = -two;
+	}
+/* L440: */
+    }
+    goto L490;
+
+/*     BROYDEN BANDED FUNCTION WITH SIGN ERROR AFFECTING THE JACOBIAN */
+/*     DIAGONAL. */
+
+L450:
+    ml = 5;
+    mu = 1;
+    i__1 = n;
+    for (k = 1; k <= i__1; ++k) {
+	i__2 = n;
+	for (j = 1; j <= i__2; ++j) {
+	    fjac[k + j * ldfjac] = zero;
+/* L460: */
+	}
+/* Computing MAX */
+	i__2 = 1, i__3 = k - ml;
+	k1 = max(i__2,i__3);
+/* Computing MIN */
+	i__2 = k + mu;
+	k2 = min(i__2,n);
+	i__2 = k2;
+	for (j = k1; j <= i__2; ++j) {
+	    if (j != k) {
+		fjac[k + j * ldfjac] = -(one + two * x[j]);
+	    }
+/* L470: */
+	}
+/* Computing 2nd power */
+	d__1 = x[k];
+	fjac[k + k * ldfjac] = two - fiftn * (d__1 * d__1);
+/* L480: */
+    }
+L490:
 }

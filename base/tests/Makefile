@@ -20,9 +20,10 @@ test_lmdif1: test_lmdif1.o ls.o ../libminpack.a
 test_lmder1: test_lmder1.o ls.o ../libminpack.a
 test_hybrd1: test_hybrd1.o eq.o ../libminpack.a
 test_hybrj1: test_hybrj1.o eq.o ../libminpack.a
+test_chkder: test_chkder.o eq.o ../libminpack.a
 
-test: test_lmdif1 test_lmder1 test_hybrd1 test_hybrj1
-	prove -f ./test_lmdif1 ./test_lmder1 ./test_hybrd1 ./test_hybrj1
+test: test_lmdif1 test_lmder1 test_hybrd1 test_hybrj1 test_chkder
+	prove -f ./test_lmdif1 ./test_lmder1 ./test_hybrd1 ./test_hybrj1 ./test_chkder
 
 speed_hybrj1: speed_hybrj1.o eq.o             ../libminpack.a
 speed_lmdif1: speed_lmdif1.o ls.o             ../libminpack.a

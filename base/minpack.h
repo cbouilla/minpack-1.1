@@ -49,13 +49,13 @@ typedef int (*minpack_func_mnj)(const int *m, const int *n, const double *x, dou
 
 /************************** MINPACK routines **************************/
 
-/* find a zero of a system of N nonlinear functions in N variables by
+/* find a zero of a system of n nonlinear functions in n variables by
    a modification of the Powell hybrid method (Jacobian calculated by
    a forward-difference approximation) */
 void hybrd1_(minpack_func_n fcn, const int *n, double *x, double *fvec, 
     const double *tol, int *info, double *wa, const int *lwa);
 
-/* find a zero of a system of N nonlinear functions in N variables by
+/* find a zero of a system of n nonlinear functions in n variables by
    a modification of the Powell hybrid method (Jacobian calculated by
    a forward-difference approximation, more general). */
 void hybrd_(minpack_func_n fcn, 
@@ -65,7 +65,7 @@ void hybrd_(minpack_func_n fcn,
 	      double *fjac, const int *ldfjac, double *r, const int *lr, double *qtf,
 	      double *wa1, double *wa2, double *wa3, double *wa4);
   
-/* find a zero of a system of N nonlinear functions in N variables by
+/* find a zero of a system of n nonlinear functions in n variables by
    a modification of the Powell hybrid method (user-supplied Jacobian) */
 void hybrj1_(minpack_func_nj fcn, const int *n, double *x, double *fvec, 
     double *fjac, const int *ldfjac, const double *tol, int *info, 
@@ -80,14 +80,14 @@ void hybrj_(minpack_func_nj fcn, const int *n, double *x, double *fvec,
     int *info, int *nfev, int *njev, double *r, const int *lr, double *qtf, 
     double *wa1, double *wa2, double *wa3, double *wa4);
 
-/* minimize the sum of the squares of nonlinear functions in N
+/* minimize the sum of the squares of m nonlinear functions in n
    variables by a modification of the Levenberg-Marquardt algorithm
    (Jacobian calculated by a forward-difference approximation) */
 void lmdif1_(minpack_func_mn fcn, int const *m, int const *n, double *x, 
 	double *fvec, double const *tol, int *info, int *iwa, 
 	double *wa, int const *lwa);
 
-/* minimize the sum of the squares of nonlinear functions in N
+/* minimize the sum of the squares of m nonlinear functions in n
    variables by a modification of the Levenberg-Marquardt algorithm
    (Jacobian calculated by a forward-difference approximation, more
    general) */
@@ -100,14 +100,14 @@ void lmdif_(minpack_func_mn fcn, const int * m, const int * n, double * x,
 	   double * wa2, double * wa3, double * wa4);
 
 
-/* minimize the sum of the squares of nonlinear functions in N
+/* minimize the sum of the squares of m nonlinear functions in n
    variables by a modification of the Levenberg-Marquardt algorithm
    (user-supplied Jacobian) */
 void lmder1_(minpack_func_mnj fcn, const int *m, const int *n, double *x, 
 	double *fvec, double *fjac, const int *ldfjac, const double *tol, 
 	int *info, int *ipvt, double *wa, const int *lwa);
 
-/* minimize the sum of the squares of nonlinear functions in N
+/* minimize the sum of the squares of m nonlinear functions in n
    variables by a modification of the Levenberg-Marquardt algorithm
    (user-supplied Jacobian, more general) */
 void lmder_(minpack_func_mnj fcn, const int *m, const int *n, double *x, 
@@ -117,9 +117,9 @@ void lmder_(minpack_func_mnj fcn, const int *m, const int *n, double *x,
    int *info, int *nfev, int *njev, int *ipvt, double *qtf, 
 	double *wa1, double *wa2, double *wa3, double *wa4);
 
-void chkder_(int *m, int *n, double *x, double *fvec, double *fjec,
-	       int *ldfjac, double *xp, double *fvecp, int *mode,
-	       double *err);
+void chkder_(const int *m, const int *n, double *x,
+	     double *fvec, double *fjac, const int *ldfjac, double *xp,
+	     double *fvecp, const int *mode, double *err);
 
 
 /***************************** internal MINPACK routines *****************************/
