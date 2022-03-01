@@ -9,7 +9,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include <minpack.h>
+#include "minpack.h"
 
 #include "ls.h"
 

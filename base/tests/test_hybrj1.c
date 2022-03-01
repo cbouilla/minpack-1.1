@@ -12,7 +12,7 @@
 #include <float.h>
 #include <stdbool.h>
 
-#include <minpack.h>
+#include "minpack.h"
 #include "eq.h"
 
 int hybrj1_known_failures[] = { 2, 3, 18, 27, 28, 44, -1 };
