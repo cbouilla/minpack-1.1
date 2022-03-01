@@ -94,7 +94,7 @@ void hybrd1_(minpack_func_n fcn, const int *n, double *x, double *fvec,
     int mu = *n - 1;
     double epsfcn = 0;
     int mode = 2;
-    for (int j = 1; j <= *n; ++j)
+    for (int j = 0; j < *n; ++j)
 	   wa[j] = 1;
     int nprint = 0;
     int lr = *n * (*n + 1) / 2;

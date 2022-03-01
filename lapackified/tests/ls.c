@@ -158,7 +158,7 @@ void commentator(int ic, double *x, double *fvec, double ftol, double xtol, int 
 	case 7:
 		tmp[1] = x[1] - 5;
 		tmp[2] = x[2] - 4;
-		dx = enorm_(&n, tmp);
+		dx = enorm_(&n, &tmp[1]);
 		tmp[1] = x[1] - 11.41;
 		tmp[2] = x[2] + 0.8968;
 		dx2 = enorm_(&n, &tmp[1]);
