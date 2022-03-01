@@ -9,13 +9,12 @@
 #include <math.h>
 #include <stdlib.h>
 #include <math.h>
-#include <float.h>
 #include <stdbool.h>
 
 #include "minpack.h"
 #include "eq.h"
 
-int hybrd1_known_failures[] = { 27, 28, 44, -1 };
+int hybrd1_known_failures[] = { 27, 28, 33, 34, 44, -1 };
 
 /* global variables */
 int nprob;

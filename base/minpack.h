@@ -1,8 +1,4 @@
-/* Declarations for minpack */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <float.h>
 
 /************************* user-supplied functions *********************************/
 
@@ -121,6 +117,12 @@ void chkder_(const int *m, const int *n, double *x,
 #define MINPACK_DWARF   DBL_MIN
 #define MINPACK_GIANT   DBL_MAX
 
+/* Original values in dpmpar */
+// #define MINPACK_EPSILON  2.22044604926e-16 
+// #define MINPACK_DWARF    2.22507385852e-308
+// #define MINPACK_GIANT    1.79769313485e308
+
+
 double enorm_(const int *n, double const *x);
 
 void fdjac1_(minpack_func_n fcn, const int *n, double *x, double *fvec,
@@ -153,6 +155,3 @@ void dogleg_(const int *n, double *r__, const int *lr,
 	const double *diag, const double *qtb, const double *delta, 
     double *x, double *wa1, double *wa2);
 
-#ifdef __cplusplus
-}
-#endif
