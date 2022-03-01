@@ -143,7 +143,8 @@ the `base` code.
 
 
 However, the actual numerical results will depend on the actual BLAS
-implementation.  The reference blas yields different numerical values than
-OpenBLAS. OpenBLAS is multi-threaded; changing the number of threads alters
-the numerical values.  Running in `valgrind` using OpenBLAS changes the
-numerical values (this does not happen with the reference BLAS). 
+implementation.  Changing the BLAS library may make some tests fail.  The
+reference blas yields different numerical values than OpenBLAS. OpenBLAS is
+multi-threaded; changing the number of threads alters the numerical values.
+Running in `valgrind` using OpenBLAS changes the numerical values (this does
+not happen with the reference BLAS). 

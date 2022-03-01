@@ -1,9 +1,4 @@
-/* Declarations for minpack */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+#include <float.h>
 
 /************************* user-supplied functions *********************************/
 
@@ -118,9 +113,16 @@ void chkder_(const int *m, const int *n, double *x,
 
 /***************************** internal MINPACK routines *****************************/
 
-#define MINPACK_EPSILON DBL_EPSILON //2.22044604926e-16
-#define MINPACK_DWARF   DBL_MIN     //2.22507385852e-308
-#define MINPACK_GIANT   DBL_MAX     //1.79769313485e308
+
+/* This replaces dpmpar */
+#define MINPACK_EPSILON DBL_EPSILON
+#define MINPACK_DWARF   DBL_MIN
+#define MINPACK_GIANT   DBL_MAX
+
+/* Original values in dpmpar */
+// #define MINPACK_EPSILON  2.22044604926e-16 
+// #define MINPACK_DWARF    2.22507385852e-308
+// #define MINPACK_GIANT    1.79769313485e308
 
 double enorm_(const int *n, double const *x);
 
@@ -200,7 +202,3 @@ extern int dorgqr_(const int *m, const int *n, const int *k,
 	const double *a, const int *lda, const double *tau,
     double *work, const int *lwork, int *info);
 
-
-#ifdef __cplusplus
-}
-#endif

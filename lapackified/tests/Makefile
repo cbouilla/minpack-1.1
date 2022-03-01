@@ -1,8 +1,12 @@
+CC=gfortran
 CFLAGS = -Wall -Wextra -I..
 LDLIBS = -lm
 
 CFLAGS += $(shell pkg-config --cflags blas lapack)
 LDLIBS += $(shell pkg-config --libs blas lapack)
+
+# LDFLAGS += -L.
+# LDLIBS += -llapack -lrefblas
 
 all: check
 
@@ -11,7 +15,7 @@ all: check
 test_hybrd1.o test_hybrj1.o test_chkder.o eq.o: eq.h
 test_lmdif1.o test_lmder1.o ls.o: ls.h
 
-test_lmdif1: test_lmdif1.o ls.o ../libminpack.a
+test_lmdif1: test_lmdif1.o ls.o ../libminpack.a 
 test_lmder1: test_lmder1.o ls.o ../libminpack.a
 test_hybrd1: test_hybrd1.o eq.o ../libminpack.a
 test_hybrj1: test_hybrj1.o eq.o ../libminpack.a
