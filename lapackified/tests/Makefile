@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Wextra
+CFLAGS = -Wall -Wextra -I..
 LDLIBS = -lm
 
 CFLAGS += $(shell pkg-config --cflags blas lapack)
