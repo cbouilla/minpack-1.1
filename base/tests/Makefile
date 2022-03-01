@@ -1,10 +1,10 @@
-CFLAGS = -Wall -Wextra
+CFLAGS = -Wall -Wextra -I..
 LDLIBS = -lm
 
 all: check
 
 .phony: check clean
-	
+
 test_hybrd1.o test_hybrj1.o test_chkder.o eq.o: eq.h
 test_lmdif1.o test_lmder1.o ls.o: ls.h
 

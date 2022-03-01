@@ -14,7 +14,7 @@ struct test_case {
 
 void initpt(int n, double *x, int nprob, double factor);
 void ssqfcn(int m, int n, const double *x, double *fvec, int nprob);
-int ssqjac(int m, int n, double *x, double *fjac, int ldfjac, int nprob);
+int ssqjac(int m, int n, const double *x, double *fjac, int ldfjac, int nprob);
 void commentator(int ic, double *x, double *fvec, double ftol, double xtol, int nfev, int njev, int info);
 
 extern struct test_case tests[];

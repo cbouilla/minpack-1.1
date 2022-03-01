@@ -92,6 +92,9 @@ void chkder_(const int *m, const int *n, double *x, double *fvec, double *fjac,
 	/* epsmch is the machine precision. */
 	double epsmch = DBL_EPSILON;
 	double eps = sqrt(epsmch);
+	double factor = 100;
+	double epsf = factor * epsmch;
+	double epslog = log10(eps);
 
 	switch (*mode) {
 	case 1:
@@ -104,9 +107,6 @@ void chkder_(const int *m, const int *n, double *x, double *fvec, double *fjac,
 		return;
 
 	case 2:
-		double factor = 100;
-		double epsf = factor * epsmch;
-		double epslog = log10(eps);
 		for (int i = 1; i <= *m; ++i)
 			err[i] = 0;
 		for (int j = 1; j <= *n; ++j) {

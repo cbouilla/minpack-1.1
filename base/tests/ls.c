@@ -158,7 +158,7 @@ void commentator(int ic, double *x, double *fvec, double ftol, double xtol, int 
 	case 7:
 		tmp[1] = x[1] - 5;
 		tmp[2] = x[2] - 4;
-		dx = enorm_(&n, tmp);
+		dx = enorm_(&n, &tmp[1]);
 		tmp[1] = x[1] - 11.41;
 		tmp[2] = x[2] + 0.8968;
 		dx2 = enorm_(&n, &tmp[1]);
@@ -310,7 +310,8 @@ void initpt(int n, double *x, int nprob, double factor)
 {
 	/* Parameter adjustments (fortran --> C) */
 	--x;
-
+	double h;
+	
 	switch (nprob) {
 		/* linear function - full rank or rank 1. */
 	case 1:
@@ -398,7 +399,7 @@ void initpt(int n, double *x, int nprob, double factor)
 
 		/* chebyquad function. */
 	case 15:
-		double h = 1. / (n + 1);
+		h = 1. / (n + 1);
 		for (int j = 1; j <= n; ++j)
 			x[j] = j * h;
 		break;
@@ -514,7 +515,8 @@ void ssqfcn(int m, int n, const double *x, double *fvec, int nprob)
 	/* Parameter adjustments (fortran --> C) */
 	--fvec;
 	--x;
-
+	double twopi;
+	
 	switch (nprob) {
 		/* linear function - full rank. */
 	case 1:
@@ -556,7 +558,7 @@ void ssqfcn(int m, int n, const double *x, double *fvec, int nprob)
 
 		/* helical valley function. */
 	case 5:
-		double twopi = 2 * M_PI;
+		twopi = 2 * M_PI;
 		tmp1 = x[2] < 0 ? -0.25 : 0.25;
 		if (x[1] > 0)
 			tmp1 = atan(x[2] / x[1]) / twopi;
@@ -763,7 +765,7 @@ void ssqfcn(int m, int n, const double *x, double *fvec, int nprob)
  *     Burton S. Garbow, Kenneth E. Hillstrom, Jorge J. Moré 
  */
 
-int ssqjac(int m, int n, double *x, double *fjac, int ldfjac, int nprob)
+int ssqjac(int m, int n, const double *x, double *fjac, int ldfjac, int nprob)
 {
 	/* Initialized data */
 	double v[11] = { 4., 2., 1., .5, .25, .167, .125, .1, .0833, .0714, .0625 };
@@ -771,11 +773,12 @@ int ssqjac(int m, int n, double *x, double *fjac, int ldfjac, int nprob)
 	/* Parameter adjustments */
 	--x;
 	fjac -= 1 + ldfjac;
-
+	double a, b, c, d, dx, prod;
+	
 	switch (nprob) {
 	case 1:
 		/* LINEAR FUNCTION - FULL RANK. */
-		double a = 2. / m;
+		a = 2. / m;
 		for (int j = 1; j <= n; ++j) {
 			for (int i = 1; i <= m; ++i)
 				fjac[i + j * ldfjac] = -a;
@@ -810,9 +813,9 @@ int ssqjac(int m, int n, double *x, double *fjac, int ldfjac, int nprob)
 
 	case 5:
 		/* HELICAL VALLEY FUNCTION. */
-		double b = x[1] * x[1] + x[2] * x[2];
-		double c = 2 * M_PI * b;
-		double d = sqrt(b);
+		b = x[1] * x[1] + x[2] * x[2];
+		c = 2 * M_PI * b;
+		d = sqrt(b);
 		fjac[ldfjac + 1] = 100 * x[2] / c;
 		fjac[ldfjac * 2 + 1] = -100 * x[1] / c;
 		fjac[ldfjac * 3 + 1] = 10;
@@ -947,7 +950,7 @@ int ssqjac(int m, int n, double *x, double *fjac, int ldfjac, int nprob)
 
 	case 15:
 		/* CHEBYQUAD FUNCTION. */
-		double dx = 1. / n;
+		dx = 1. / n;
 		for (int j = 1; j <= n; ++j) {
 			double tmp1 = 1;
 			double tmp2 = 2 * x[j] - 1;
@@ -968,7 +971,7 @@ int ssqjac(int m, int n, double *x, double *fjac, int ldfjac, int nprob)
 
 	case 16:
 		/* BROWN ALMOST-LINEAR FUNCTION. */
-		double prod = 1;
+		prod = 1;
 		for (int j = 1; j <= n; ++j) {
 			prod = x[j] * prod;
 			for (int i = 1; i <= n; ++i)

@@ -29,7 +29,7 @@ int nx[60];
 double fnm[60];
 
 /* This function is called by the solver and obeys the Fortran calling convention */
-void fcn(int *n, double *x, double *fvec, double *fjac, int *ldfjac, int *iflag)
+void fcn(const int *n, const double *x, double *fvec, double *fjac, const int *ldfjac, int *iflag)
 {
 	if (*iflag == 1) {
 		vecfcn(*n, x, fvec, nprob);

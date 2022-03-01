@@ -12,7 +12,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include <minpack.h>
+#include "minpack.h"
 #include "ls.h"
 
 int lmdif1_known_failures[] = { 26, 27, 38, 40, -1 };
@@ -30,7 +30,7 @@ int nx[60];
 double fnm[60];
 
 /* This function is called by the solver and obeys the Fortran calling convention */
-void fcn(int *m, int *n, double *x, double *fvec, int *iflag)
+void fcn(const int *m, const int *n, const double *x, double *fvec, int *iflag)
 {
 	ssqfcn(*m, *n, x, fvec, nprob);
 	if (*iflag == 1)

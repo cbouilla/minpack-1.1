@@ -12,7 +12,7 @@
 #include <float.h>
 #include <stdbool.h>
 
-#include <minpack.h>
+#include "minpack.h"
 #include "eq.h"
 
 int hybrd1_known_failures[] = { 27, 28, 44, -1 };
@@ -28,7 +28,7 @@ int nx[60];
 double fnm[60];
 
 /* This function is called by the solver and obeys the Fortran calling convention */
-void fcn(int *n, double *x, double *fvec, int *iflag)
+void fcn(const int *n, const double *x, double *fvec, int *iflag)
 {
 	(void)iflag;
 	vecfcn(*n, x, fvec, nprob);

@@ -11,7 +11,7 @@ extern "C" {
  *    calculate the functions at x and return this vector in fvec.
  *   return a negative value to terminate hybrd1/hybrd.
  */
-typedef int (*minpack_func_n)(const int * n, const double * x, double *fvec, int *iflag);
+typedef void (*minpack_func_n)(const int * n, const double * x, double *fvec, int *iflag);
 
 /*
  * for hybrj1 and hybrj
@@ -19,7 +19,7 @@ typedef int (*minpack_func_n)(const int * n, const double * x, double *fvec, int
  *         if iflag = 2 calculate the jacobian  at x and return this matrix in fjac. do not alter fvec.
  * return a negative value to terminate hybrj1/hybrj
  */
-typedef int (*minpack_func_nj)(const int *n, const double *x, double *fvec, double *fjac, const int *ldfjac, int *iflag);
+typedef void (*minpack_func_nj)(const int *n, const double *x, double *fvec, double *fjac, const int *ldfjac, int *iflag);
 
 /*
  * for lmdif1 and lmdif
@@ -29,7 +29,7 @@ typedef int (*minpack_func_nj)(const int *n, const double *x, double *fvec, doub
  *         One jacobian computation requires exactly n function calls with iflag = 2.
  * return a negative value to terminate lmdif1/lmdif
  */
-typedef int (*minpack_func_mn)(const int * m, const int * n, double const *x, double *fvec, int *iflag);
+typedef void (*minpack_func_mn)(const int * m, const int * n, double const *x, double *fvec, int *iflag);
 
 /*
  * for lmder1 and lmder
@@ -37,7 +37,7 @@ typedef int (*minpack_func_mn)(const int * m, const int * n, double const *x, do
  *         if iflag = 2 calculate the jacobian  at x and return this matrix in fjac. do not alter fvec.
  * return a negative value to terminate lmder1/lmder
  */
-typedef int (*minpack_func_mnj)(const int *m, const int *n, const double *x, double *fvec, double *fjac, const int *ldfjac, int *iflag);
+typedef void (*minpack_func_mnj)(const int *m, const int *n, const double *x, double *fvec, double *fjac, const int *ldfjac, int *iflag);
 
 
 /************************** MINPACK routines **************************/
