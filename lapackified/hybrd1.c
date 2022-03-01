@@ -101,7 +101,7 @@ void hybrd1_(minpack_func_n fcn, const int *n, double *x, double *fvec,
     int index = *n * 6 + lr;
 
     hybrd_(fcn, n, x, fvec, &xtol, &maxfev, &ml, &mu, &epsfcn, wa, 
-        &mode, &factor, &nprint, info, &nfev, &wa[index + 1], n, 
+        &mode, &factor, &nprint, info, &nfev, &wa[index], n, 
         &wa[*n * 6], &lr, &wa[*n], &wa[*n * 2], &wa[*n * 3], &wa[*n * 4], &wa[*n * 5]);
     if (*info == 5)
 	   *info = 4;
