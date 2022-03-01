@@ -14,7 +14,7 @@
 #include <sys/time.h>
 
 #include <minpack.h>
-#include "eq.h"
+#include "ls.h"
 
 double wtime()
 {
@@ -30,45 +30,43 @@ int nprob;
 /* This function is called by the solver and obeys the Fortran calling convention */
 void fcn(int *m, int *n, double *x, double *fvec, double *fjac, int *ldfjac, int *iflag)
 {
-	(void) m;
 	if (*iflag == 1) {
-		vecfcn(*n, x, fvec, nprob);
+		ssqfcn(*m, *n, x, fvec, nprob);
 		nfev += 1;
 	}
 	if (*iflag == 2) {
-		vecjac(*n, x, fjac, *ldfjac, nprob);
+		ssqjac(*m, *n, x, fjac, *ldfjac, nprob);
 		njev += 1;
 	}
 }
 
-void do_test(int nprob_, int n, double factor)
+void do_test(int nprob_, int n, int m, double factor)
 {
 	double tol = sqrt(DBL_EPSILON);
 
 	nprob = nprob_;
 	nfev = 0;
 	njev = 0;
-	
-	int lwa = 5*n + n;
-	printf("# %s with n=%d\n", problem_name[nprob - 1], n);
+
+	int lwa = 5*n + m;
+	printf("# %s with n=%d, m=%d\n", problem_name[nprob - 1], n, m);
 
 	double x[n];		// solution
 	int iwa[n];		    // integer work array for lmdif1
 
 	double * wa = malloc(lwa * sizeof(*wa));	    // work array for lmdif1
-	double * fvec = malloc(n * sizeof(*fvec));	    // residuals
-	double * fjac = malloc(n * n * sizeof(*fjac));  // jacobian
+	double * fvec = malloc(m * sizeof(*fvec));	    // residuals
+	double * fjac = malloc(m * n * sizeof(*fjac));  // jacobian
 
-	assert(wa != NULL);
 	initpt(n, x, nprob, factor);	// set initial point
 
 	int info = 0;
 	double start = wtime();
-	lmder1_(fcn, &n, &n, x, fvec, fjac, &n, &tol, &info, iwa, wa, &lwa);	// find solution
+	lmder1_(fcn, &m, &n, x, fvec, fjac, &m, &tol, &info, iwa, wa, &lwa);	// find solution
 	double stop = wtime();
 
-	vecfcn(n, x, fvec, nprob);	// evaluate residuals
-	double fnorm2 = enorm_(&n, fvec);
+	ssqfcn(m, n, x, fvec, nprob);	// evaluate residuals
+	double fnorm2 = enorm_(&m, fvec);
 	njev /= n;
 	free(wa);
 	free(fvec);
@@ -86,8 +84,13 @@ void do_test(int nprob_, int n, double factor)
 int main()
 {
 	double start = wtime();
-	do_test(13, 3000, 1);
-	do_test(11, 3200, 1);
-	do_test(12, 1000, 1);
+	do_test(1, 1000, 1000, 1);
+	do_test(1, 1000, 10000, 1);
+	do_test(1, 1000, 100000, 1);
+	do_test(3, 1000, 1000, 1);
+	do_test(3, 1000, 10000, 1);
+	do_test(16, 1000, 1000, 1);
+	do_test(16, 3000, 3000, 1);
+	do_test(12, 3, 1000000, 1);
 	printf("# total time: %.1fs\n", wtime() - start);
 }

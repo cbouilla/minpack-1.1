@@ -182,6 +182,6 @@ void lmdif_(minpack_func_mn fcn, const int * m, const int * n, double * x,
 	   int * info, int * nfev, double * fjac, const int * ldfjac, 
 	   int * ipvt, double * qtf, double * wa1, double * wa2, double * wa3, double * wa4)
 {	
-	lmddifer_(NULL, fcn, m, n, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, epsfcn, 
+	lmbase(NULL, fcn, m, n, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, epsfcn, 
     diag, mode, factor, nprint, info, nfev, NULL, ipvt, qtf, wa1, wa2, wa3, wa4);
 }

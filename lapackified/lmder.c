@@ -179,6 +179,6 @@ void lmder_(minpack_func_mnj fcn, const int *m, const int *n, double *x,
     int *info, int *nfev, int *njev, int *ipvt, double *qtf, 
 	double *wa1, double *wa2, double *wa3, double *wa4)
 {
-    lmddifer_(fcn, NULL, m, n, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, NULL, 
+    lmbase(fcn, NULL, m, n, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, NULL, 
     diag, mode, factor, nprint, info, nfev, njev, ipvt, qtf, wa1, wa2, wa3, wa4);
 }
