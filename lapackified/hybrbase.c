@@ -5,6 +5,44 @@
 
 #include "minpack.h"
 
+static int query_worksize(const int *n, const int *ldfjac)
+{
+        int c1 = 1;
+        int lwork = -1;
+        double work[1];
+        int info;
+
+        /* query LAPACK */
+        dgeqrf_(n, n, NULL, ldfjac, NULL, work, &lwork, &info);
+        if (info != 0)
+                return -1;
+        int needed_dgeqrf = work[0];
+        if (needed_dgeqrf < *n)
+                return -1;
+
+        dormqr_("Left", "Transpose", n, &c1, n, NULL, ldfjac, NULL, NULL, n, work, &lwork, &info);
+        if (info != 0)
+                return -1;
+        int needed_dormqr = work[0];
+        if (needed_dormqr < *n)
+                return -1;
+        
+	dorgqr_(n, n, n, NULL, ldfjac, NULL, work, &lwork, &info);
+	if (info != 0)
+                return -1;
+        int needed_dorgqr = work[0];
+        if (needed_dorgqr < *n)
+                return -1;
+        
+        /* take max */
+        int max = needed_dgeqrf;
+        if (max < needed_dormqr)
+        	max = needed_dormqr;
+        if (max < needed_dorgqr)
+        	max = needed_dorgqr;
+        return max;
+}
+
 void hybrbase(minpack_func_n fcn_dif, minpack_func_nj fcn_der,
 	      const int *n, double *x, double *fvec, double *fjac, const int *ldfjac, 
 	      const double *xtol, const int *maxfev,
@@ -23,6 +61,7 @@ void hybrbase(minpack_func_n fcn_dif, minpack_func_nj fcn_der,
 	int iflag = 0;
 	*info = 0;
 	*nfev = 0;
+	double *work = NULL;
 
 	/* check the input parameters for errors. */
 	if (*n <= 0 || *ldfjac < *n || *xtol < 0 || *maxfev <= 0 || *factor <= 0 || *lr < *n * (*n + 1) / 2)
@@ -36,6 +75,13 @@ void hybrbase(minpack_func_n fcn_dif, minpack_func_nj fcn_der,
 			if (diag[j] <= 0)
 				goto fini;
 	}
+	
+	int lwork = query_worksize(n, ldfjac);
+        if (lwork < 0)
+                goto fini;
+        work = malloc(lwork * sizeof(*work));
+        if (work == NULL)
+                goto fini;
 
 	/* Evaluate the function at the starting point and calculate its norm. */
 	iflag = 1;
@@ -93,30 +139,19 @@ void hybrbase(minpack_func_n fcn_dif, minpack_func_nj fcn_der,
 				delta = *factor;
 		}
 
-		/* prepare QR factorization */
-		double *tau = wa1;
-
-		/* query optimal size of work */
-		int lapack_info = 0;
-		int lwork = -1;
-		dgeqrf_(n, n, fjac, ldfjac, tau, tau, &lwork, &lapack_info);	// LAPACK
-		assert(lapack_info == 0);
-		lwork = tau[0];
-		assert(lwork >= *n);
-
-		/* alloc work area. TODO: move to start of function */
-		double *work = malloc(lwork * sizeof(*work));
-		assert(work != NULL);
-
 		/* compute the QR factorization of the jacobian. */
+		double *tau = wa1;
+		int lapack_info;
 		dgeqrf_(n, n, fjac, ldfjac, tau, work, &lwork, &lapack_info);	// LAPACK
-		assert(lapack_info == 0);
+		if (lapack_info != 0)
+			goto fini;
 
 		/* qtf <-- (Q transpose)*fvec */
 		for (int i = 0; i < *n; ++i)
 			wa4[i] = fvec[i];
 		dormqr_("Left", "Transpose", n, &c1, n, fjac, ldfjac, tau, wa4, n, work, &lwork, &lapack_info);
-		assert(lapack_info == 0);
+		if (lapack_info != 0)
+			goto fini;
 		for (int j = 0; j < *n; ++j)
 			qtf[j] = wa4[j];
 
@@ -135,10 +170,8 @@ void hybrbase(minpack_func_n fcn_dif, minpack_func_nj fcn_der,
 
 		/* accumulate the orthogonal factor in fjac. */
 		dorgqr_(n, n, n, fjac, ldfjac, tau, work, &lwork, &lapack_info);
-		assert(lapack_info == 0);
-
-		/* TODO: move to fini */
-		free(work);
+		if (lapack_info != 0)
+			goto fini;
 
 		/* rescale if necessary. */
 		if (*mode != 2)
@@ -296,6 +329,7 @@ void hybrbase(minpack_func_n fcn_dif, minpack_func_nj fcn_der,
 
  fini:
 	/* termination, either normal or user imposed. */
+ 	free(work);
 	if (iflag < 0)
 		*info = iflag;
 	iflag = 0;

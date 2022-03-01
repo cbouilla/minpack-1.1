@@ -5,6 +5,32 @@
 
 #include "minpack.h"
 
+
+static int query_worksize(const int *m, const int *n, const int *ldfjac)
+{
+        int c1 = 1;
+        int lwork = -1;
+        double work[1];
+        int info;
+
+        /* query LAPACK */
+        dgeqp3_(m, n, NULL, ldfjac, NULL, NULL, work, &lwork, &info);
+        if (info != 0)
+                return -1;
+        int needed_dgeqp3 = work[0];
+        if (needed_dgeqp3 < 3 * (*n) + 1)
+                return -1;
+        dormqr_("Left", "Transpose", m, &c1, n, NULL, ldfjac, NULL, NULL, m, work, &lwork, &info);
+        if (info != 0)
+                return -1;
+        int needed_dormqr = work[0];
+        if (needed_dormqr < *n)
+                return -1;
+        /* take max */
+        int max = needed_dgeqp3 > needed_dormqr ? needed_dgeqp3 : needed_dormqr;
+        return max;
+}
+
 /*
  * This function concentrates all the common code to lmdif and lmder
  */
@@ -24,6 +50,7 @@ void lmbase(minpack_func_mnj fcn_der, minpack_func_mn fcn_dif, const int *m, con
 	int iflag = 0;
 	*info = 0;
 	*nfev = 0;
+        double * work = NULL;
 
 	/* check the input parameters for errors. */
 	if (*n <= 0 || *m < *n || *ldfjac < *m || *ftol < 0 || *xtol < 0 || *gtol < 0
@@ -38,6 +65,13 @@ void lmbase(minpack_func_mnj fcn_der, minpack_func_mn fcn_dif, const int *m, con
 			if (diag[j] <= 0)
 				goto fini;
 	}
+
+        int lwork = query_worksize(m, n, ldfjac);
+        if (lwork < 0)
+                goto fini;
+        work = malloc(lwork * sizeof(*work));
+        if (work == NULL)
+                goto fini;
 
 	/* evaluate the function at the starting point and calculate its norm */
 	*nfev = 1;
@@ -108,40 +142,25 @@ void lmbase(minpack_func_mnj fcn_der, minpack_func_mn fcn_dif, const int *m, con
 				delta = *factor;
 		}
 
-		/* prepare QR factorization */
-		double *tau = wa1;
-
 		/* set all columns free */
 		for (int j = 0; j < *n; j++)
 			ipvt[j] = 0;
 
-		/* query optimal size of work */
-		int lapack_info = 0;
-		int lwork = -1;
-		dgeqp3_(m, n, fjac, ldfjac, ipvt, tau, tau, &lwork, &lapack_info);	// LAPACK
-		assert(lapack_info == 0);
-		lwork = tau[0];
-		assert(lwork >= 3 * (*n) + 1);
-
-		/* alloc work area. TODO: move to start of function */
-		double *work = malloc(lwork * sizeof(*work));
-		assert(work != NULL);
-
 		/* compute the QR factorization of the jacobian. */
-		dgeqp3_(m, n, fjac, ldfjac, ipvt, tau, work, &lwork, &lapack_info);	// LAPACK
-		assert(lapack_info == 0);
+                int lapack_info;
+                double *tau = wa1;
+		dgeqp3_(m, n, fjac, ldfjac, ipvt, tau, work, &lwork, &lapack_info);
+		if (lapack_info != 0)
+                        goto fini;
 
 		/* qtf <-- (Q transpose)*fvec */
 		for (int i = 0; i < *m; ++i)
 			wa4[i] = fvec[i];
-		dormqr_("Left", "Transpose", m, &c1, n, fjac, ldfjac, tau, wa4, m, work, &lwork,
-			&lapack_info);
-		assert(lapack_info == 0);
+		dormqr_("Left", "Transpose", m, &c1, n, fjac, ldfjac, tau, wa4, m, work, &lwork, &lapack_info);
+                if (lapack_info != 0)
+                        goto fini;
 		for (int j = 0; j < *n; ++j)
 			qtf[j] = wa4[j];
-
-		/* TODO: move to fini */
-		free(work);
 
 		/* Compute the norm of the scaled gradient. */
 		gnorm = 0;
@@ -283,6 +302,8 @@ void lmbase(minpack_func_mnj fcn_der, minpack_func_mn fcn_dif, const int *m, con
 	}			/* outer loop. */
 
  fini:
+        free(work);
+
 	/* termination, either normal or user imposed. */
 	if (iflag < 0)
 		*info = iflag;
