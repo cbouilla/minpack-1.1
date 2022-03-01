@@ -100,7 +100,7 @@ void fdjac1_(minpack_func_n fcn, const int *n, double *x, double *fvec,
 	fjac -= fjac_offset;
 
 	/* epsmch is the machine precision. */
-	double epsmch = DBL_EPSILON;
+	double epsmch = MINPACK_EPSILON;
 	double eps = sqrt(fmax(*epsfcn, epsmch));
 	int msum = *ml + *mu + 1;
 	if (msum < *n)

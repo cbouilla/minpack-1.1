@@ -116,6 +116,11 @@ void chkder_(const int *m, const int *n, double *x,
 
 
 /***************************** internal MINPACK routines *****************************/
+
+#define MINPACK_EPSILON 2.22044604926e-16
+#define MINPACK_DWARF   2.22507385852e-308
+#define MINPACK_GIANT   1.79769313485e308
+
 double enorm_(const int *n, double const *x);
 
 void fdjac1_(minpack_func_n fcn, const int *n, double *x, double *fvec,

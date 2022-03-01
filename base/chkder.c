@@ -90,7 +90,7 @@ void chkder_(const int *m, const int *n, double *x, double *fvec, double *fjac,
 	fjac -= fjac_offset;
 
 	/* epsmch is the machine precision. */
-	double epsmch = DBL_EPSILON;
+	double epsmch = MINPACK_EPSILON;
 	double eps = sqrt(epsmch);
 	double factor = 100;
 	double epsf = factor * epsmch;

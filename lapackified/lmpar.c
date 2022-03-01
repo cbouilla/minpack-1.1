@@ -100,7 +100,7 @@ void lmpar_(const int *n, double *r, const int *ldr, int *ipvt, double *diag,
 	double *qtb, double *delta, double *par, double *x, double *sdiag, double *wa1, double *wa2)
 {
 	/* dwarf is the smallest positive magnitude. */
-	double dwarf = DBL_MIN;
+	double dwarf = MINPACK_DWARF;
 	int r_dim1 = *ldr;
 
 	/* Compute and store in x the gauss-newton direction. If the

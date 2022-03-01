@@ -84,7 +84,7 @@ void fdjac2_(minpack_func_mn fcn, const int *m, const int *n, double *x,
 	int fjac_dim1 = *ldfjac;
 
 	/* epsmch is the machine precision. */
-	double epsmch = DBL_EPSILON;
+	double epsmch = MINPACK_EPSILON;
 
 	double eps = sqrt(fmax(*epsfcn, epsmch));
 	for (int j = 0; j < *n; ++j) {

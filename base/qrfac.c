@@ -81,7 +81,7 @@ void qrfac_(const int *m, const int *n, double *a, const int *lda, int *pivot, i
 	--ipvt;
 
 	/* epsmch is the machine precision. */
-	double epsmch = DBL_EPSILON;
+	double epsmch = MINPACK_EPSILON;
 
 	/* compute the initial column norms and initialize several arrays. */
 	for (int j = 1; j <= *n; ++j) {

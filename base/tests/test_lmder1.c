@@ -42,7 +42,7 @@ void fcn(const int *m, const int *n, const double *x, double *fvec, double *fjac
 
 void do_test(int ic)
 {
-	double tol = sqrt(DBL_EPSILON);
+	double tol = sqrt(MINPACK_EPSILON);
 	double ftol = 2e-5;
 
 	// set global variables

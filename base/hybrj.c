@@ -157,7 +157,7 @@ void hybrj_(minpack_func_nj fcn, const int *n, double *x, double *fvec,
 	--r;
 
 	/* epsmch is the machine precision. */
-	double epsmch = DBL_EPSILON;
+	double epsmch = MINPACK_EPSILON;
 
 	int iflag = 0;
 	*info = 0;

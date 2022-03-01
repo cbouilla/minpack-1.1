@@ -43,8 +43,8 @@ void fcn(const int *n, const double *x, double *fvec, double *fjac, const int *l
 
 void do_test(int ic)
 {
-	double tol = sqrt(DBL_EPSILON);
-	double ftol = 1e-7;
+	double tol = sqrt(MINPACK_EPSILON);
+	double ftol = 1e-6;
 
 	double x[40];		// solution
 	double fvec[40];	// residuals

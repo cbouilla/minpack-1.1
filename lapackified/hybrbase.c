@@ -52,7 +52,7 @@ void hybrbase(minpack_func_n fcn_dif, minpack_func_nj fcn_der,
 	      double *wa1, double *wa2, double *wa3, double *wa4)
 {
 	/* epsmch is the machine precision. */
-	double epsmch = DBL_EPSILON;
+	double epsmch = MINPACK_EPSILON;
 	int fjac_dim1 = *ldfjac;
 	int c1 = 1;
 	int msum = *ml + *mu + 1;

@@ -196,7 +196,7 @@ void lmdif_(minpack_func_mn fcn, const int * m, const int * n, double * x,
 	fjac -= fjac_offset;
 
 	/* epsmch is the machine precision. */
-	double epsmch = DBL_EPSILON;
+	double epsmch = MINPACK_EPSILON;
 	int iflag = 0;
 	*info = 0;
 	*nfev = 0;

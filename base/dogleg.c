@@ -65,7 +65,7 @@ void dogleg_(const int *n, double *r, const int *lr,
 	--r;
 
 	/* epsmch is the machine precision. */
-	double epsmch = DBL_EPSILON;
+	double epsmch = MINPACK_EPSILON;
 	double temp;
 
 	/* first, calculate the gauss-newton direction. */

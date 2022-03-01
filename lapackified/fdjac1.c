@@ -96,7 +96,7 @@ void fdjac1_(minpack_func_n fcn, const int *n, double *x, double *fvec,
     int fjac_dim1 = *ldfjac;
 
 	/* epsmch is the machine precision. */
-	double epsmch = DBL_EPSILON;
+	double epsmch = MINPACK_EPSILON;
 	double eps = sqrt(fmax(*epsfcn, epsmch));
 	
 	/* computation of dense approximate jacobian. */

@@ -42,7 +42,7 @@ void fcn(int *m, int *n, double *x, double *fvec, double *fjac, int *ldfjac, int
 
 void do_test(int nprob_, int n, int m, double factor)
 {
-	double tol = sqrt(DBL_EPSILON);
+	double tol = sqrt(MINPACK_EPSILON);
 
 	nprob = nprob_;
 	nfev = 0;

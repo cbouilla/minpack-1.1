@@ -73,7 +73,7 @@ void r1updt_(const int *m, const int *n, double *s, const int *ls, const double 
 	--s;
 
 	/* giant is the largest magnitude. */
-	double giant = DBL_MAX;
+	double giant = MINPACK_GIANT;
 
 	/* initialize the diagonal element pointer. */
 	int jj = *n * ((*m * 2) - *n + 1) / 2 - (*m - *n);

@@ -82,7 +82,7 @@ void chkder_(const int *m, const int *n, double *x, double *fvec, double *fjac,
 	int fjac_dim1 = *ldfjac;
 
 	/* epsmch is the machine precision. */
-	double epsmch = DBL_EPSILON;
+	double epsmch = MINPACK_EPSILON;
 	double eps = sqrt(epsmch);
 
 	switch (*mode) {

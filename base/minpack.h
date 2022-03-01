@@ -114,8 +114,13 @@ void chkder_(const int *m, const int *n, double *x,
 	     double *fvec, double *fjac, const int *ldfjac, double *xp,
 	     double *fvecp, const int *mode, double *err);
 
-
 /***************************** internal MINPACK routines *****************************/
+
+/* This replaces dpmpar */
+#define MINPACK_EPSILON DBL_EPSILON
+#define MINPACK_DWARF   DBL_MIN
+#define MINPACK_GIANT   DBL_MAX
+
 double enorm_(const int *n, double const *x);
 
 void fdjac1_(minpack_func_n fcn, const int *n, double *x, double *fvec,

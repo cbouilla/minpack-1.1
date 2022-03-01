@@ -46,7 +46,7 @@ void lmbase(minpack_func_mnj fcn_der, minpack_func_mn fcn_dif, const int *m, con
 	int c1 = 1;
 
 	/* epsmch is the machine precision. */
-	double epsmch = DBL_EPSILON;
+	double epsmch = MINPACK_EPSILON;
 	int iflag = 0;
 	*info = 0;
 	*nfev = 0;

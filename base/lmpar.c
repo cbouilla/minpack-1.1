@@ -112,7 +112,7 @@ void lmpar_(const int *n, double *r, const int *ldr, int *ipvt, double *diag,
 	r -= r_dim1 + 1;
 
 	/* dwarf is the smallest positive magnitude. */
-	double dwarf = DBL_MIN;
+	double dwarf = MINPACK_DWARF;
 
 	/* Compute and store in x the gauss-newton direction. If the
 	   jacobian is rank-deficient, obtain a least squares solution. */

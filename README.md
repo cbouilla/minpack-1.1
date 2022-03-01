@@ -80,6 +80,25 @@ potentially altered by Charles Bouillaguet.  All errors are mostly hiw own!
 
 All versions should be drop-in replacement for the original Fortran code.
 
+Tests
+-----
+
+The original 32 test cases have been ported to C, and modified to detect
+success or failure. This uses the "Test Anything Protocol" that originates
+from perl (using the `prove` test harness which is part of perl).  The new
+set of tests is thus suitable for Continuous Integration.
+
+It must be noted that the original Fortran code fails some tests. These
+are "known failures".
+
+Some limited benchmarking code has been added.
+
+
+`fortran` version
+-----------------
+
+This is the original fortran code, along with the C tests.
+
 
 `base` version
 --------------
@@ -91,12 +110,14 @@ and some manual editing.
 The `lmstr` (non-linear least squares with limited storage) function has not
 been included.
 
-The tests have been ported to C, and modified to detect success or failure.
-This uses the "Test Anything Protocol" that originates from perl (using the
-`prove` test harness which is part of perl).  The new set of tests is thus
-suitable for Continuous Integration.
+The main difference with the Fortran code is that the `dpmpar` function has
+been removed, and replaced by constants from the `float.h` standard header.
+There are tiny differences between the constants hardcoded in
+`dpmpar` and the actual values (2.22044604926e-16 vs 2.2204460492503130808e-16). 
+*This change alters the behavior of the code*. It makes two tests fail
+ (does not converge).
 
-Some limited benchmarking code has been added.
+The test suite has been updated to consider these as "known failures".
 
 
 `lapackified` version
@@ -119,3 +140,10 @@ The code in the `lapackified` folder differs from the `base/` code as follows:
 
 All-in-all, the `lapackified` code is about 25% smaller and much faster than
 the `base` code.
+
+
+However, the actual numerical results will depend on the actual BLAS
+implementation.  The reference blas yields different numerical values than
+OpenBLAS. OpenBLAS is multi-threaded; changing the number of threads alters
+the numerical values.  Running in `valgrind` using OpenBLAS changes the
+numerical values (this does not happen with the reference BLAS). 
