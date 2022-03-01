@@ -1,4 +1,4 @@
-CFLAGS= -O3 -Wall -Wextra
+CFLAGS= -O3 -Wall -Wextra -g
 LDFLAGS= -g
 default: libminpack.a
 

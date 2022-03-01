@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
-#include <minpack.h>
+#include "minpack.h"
 #include "eq.h"
 
 double wtime()

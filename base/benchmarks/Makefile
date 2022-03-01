@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Wextra
+CFLAGS = -Wall -Wextra -I..
 LDLIBS = -lm
 
 all: bench

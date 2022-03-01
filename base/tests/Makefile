@@ -1,4 +1,4 @@
-CFLAGS = -Wall -Wextra -I..
+CFLAGS = -Wall -Wextra -g -I..
 LDLIBS = -lm
 
 all: check

@@ -2,7 +2,7 @@
 #include <math.h>
 #include <stdbool.h>
 
-#include <minpack.h>
+#include "minpack.h"
 
 #include "ls.h"
 
