@@ -212,8 +212,7 @@ void hybrd_(minpack_func_n fcn,
 
 		/* calculate the jacobian matrix. */
 		iflag = 2;
-    		fdjac1_(fcn, n, &x[1], &fvec[1], &fjac[fjac_offset], ldfjac, &iflag,
-			ml, mu, epsfcn, &wa1[1], &wa2[1]);
+    		fdjac1_(fcn, n, &x[1], &fvec[1], &fjac[fjac_offset], ldfjac, &iflag, ml, mu, epsfcn, &wa1[1], &wa2[1]);
 		*nfev += msum;
 		if (iflag < 0)
 			goto fini;

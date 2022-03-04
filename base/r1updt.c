@@ -92,7 +92,7 @@ void r1updt_(const int *m, const int *n, double *s, const int *ls, const double 
 		jj -= *m - j + 1;
 		w[j] = 0;
 		if (v[j] == 0)
-			break;
+			continue;
 
 		/* determine a givens rotation which eliminates the */
 		/* j-th element of v. */

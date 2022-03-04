@@ -102,10 +102,6 @@ void hybrj1_(minpack_func_nj fcn, const int *n, double *x, double *fvec, double 
 	int lr = *n * (*n + 1) / 2;
 	int nfev = 0;
 	int njev = 0;
-
-//     for (int i = 0; i < *lwa; i++)
-//         wa[i] = 1337;
-
     double * diag = wa;
     for (int j = 0; j < *n; ++j)
         diag[j] = 1;
