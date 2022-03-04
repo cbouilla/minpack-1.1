@@ -98,15 +98,27 @@ void hybrj1_(minpack_func_nj fcn, const int *n, double *x, double *fvec, double 
 	int maxfev = (*n + 1) * 100;
 	double xtol = *tol;
 	int mode = 2;
-	for (int j = 0; j < *n; ++j)
-		wa[j] = 1;
 	int nprint = 0;
 	int lr = *n * (*n + 1) / 2;
 	int nfev = 0;
 	int njev = 0;
-	hybrj_(fcn, n, x, fvec, fjac, ldfjac, &xtol, &maxfev, wa, &mode, &factor, &nprint, info,
-	       &nfev, &njev, &wa[*n * 6], &lr, &wa[*n], &wa[*n * 2], &wa[*n * 3], &wa[*n * 4],
-	       &wa[*n * 5]);
-	if (*info == 5)
+
+//     for (int i = 0; i < *lwa; i++)
+//         wa[i] = 1337;
+
+    double * diag = wa;
+    for (int j = 0; j < *n; ++j)
+        diag[j] = 1;
+    double *qtf = &wa[*n];
+    double * wa1 = &wa[*n * 2];
+    double * wa2 = &wa[*n * 3];
+    double * wa3 = &wa[*n * 4];
+    double * wa4 = &wa[*n * 5];
+    double * r = &wa[*n * 6];
+	
+    hybrj_(fcn, n, x, fvec, fjac, ldfjac, &xtol, &maxfev, wa, &mode, &factor, &nprint, info,
+	       &nfev, &njev, r, &lr, qtf, wa1, wa2, wa3, wa4);
+	
+    if (*info == 5)
 		*info = 4;
 }

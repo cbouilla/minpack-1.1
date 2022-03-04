@@ -100,7 +100,7 @@ int main(void)
 	for (int ic = 0; ic < 55; ic++)
 		do_test(ic);
 
-	printf("\n\n# Summary of 55 calls to hybrd1: \n\n");
+	printf("\n\n# Summary of 55 calls to hybrj1: \n\n");
 	printf("#  test  nprob   n    nfev   njev   info  final l2 norm \n");
 	for (int i = 0; i < 55; i++)
 		printf("# %5d%5d%5d%5d%5d%5d%16.7e\n", i + 1, np[i], na[i], nf[i], nj[i], nx[i], fnm[i]);

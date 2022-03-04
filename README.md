@@ -93,6 +93,9 @@ are "known failures".
 
 Some limited benchmarking code has been added.
 
+Testing MINPACK is difficult. A list of known issues is discussed below.
+
+
 
 `fortran` version
 -----------------
@@ -112,12 +115,18 @@ been included.
 
 The main difference with the Fortran code is that the `dpmpar` function has
 been removed, and replaced by constants from the `float.h` standard header.
-There are tiny differences between the constants hardcoded in
-`dpmpar` and the actual values (2.22044604926e-16 vs 2.2204460492503130808e-16). 
-*This change alters the behavior of the code*. It makes two tests fail
- (does not converge).
+
+There are tiny differences between the constants hardcoded in `dpmpar` and the
+actual values (2.22044604926e-16 vs 2.2204460492503130808e-16 for machine epsilon). 
+*These changes alter the behavior of the code*. It makes two tests fail
+(does not converge).
 
 The test suite has been updated to consider these as "known failures".
+
+Using a different compiler alters the behavior of the code (e.g. tests fail
+with `gcc`, succeed with `clang`). Changing compiler options may make some
+test fails (e.g. pass with `-O1` but fail with `-O2`; actually observed with
+`gcc` on POWER8 processors).
 
 
 `lapackified` version

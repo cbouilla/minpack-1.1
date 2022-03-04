@@ -1,6 +1,5 @@
-CC=gfortran
-CFLAGS = -Wall -Wextra -I..
-LDLIBS = -lm
+CFLAGS = -Wall -Wextra -I.. -g
+LDLIBS = -lm 
 
 CFLAGS += $(shell pkg-config --cflags blas lapack)
 LDLIBS += $(shell pkg-config --libs blas lapack)

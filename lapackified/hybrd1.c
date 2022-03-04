@@ -94,15 +94,24 @@ void hybrd1_(minpack_func_n fcn, const int *n, double *x, double *fvec,
     int mu = *n - 1;
     double epsfcn = 0;
     int mode = 2;
-    for (int j = 0; j < *n; ++j)
-	   wa[j] = 1;
     int nprint = 0;
     int lr = *n * (*n + 1) / 2;
+    double * diag = wa;
+    for (int j = 0; j < *n; ++j)
+        diag[j] = 1;
     int index = *n * 6 + lr;
+    double * fjac = &wa[index];
+    double *qtf = &wa[*n];
+    double * wa1 = &wa[*n * 2];
+    double * wa2 = &wa[*n * 3];
+    double * wa3 = &wa[*n * 4];
+    double * wa4 = &wa[*n * 5];
+    double * r = &wa[*n * 6];
 
-    hybrd_(fcn, n, x, fvec, &xtol, &maxfev, &ml, &mu, &epsfcn, wa, 
-        &mode, &factor, &nprint, info, &nfev, &wa[index], n, 
-        &wa[*n * 6], &lr, &wa[*n], &wa[*n * 2], &wa[*n * 3], &wa[*n * 4], &wa[*n * 5]);
+    hybrd_(fcn, n, x, fvec, &xtol, &maxfev, &ml, &mu, &epsfcn, diag, 
+        &mode, &factor, &nprint, info, &nfev, fjac, n, r, &lr, 
+        qtf, wa1, wa2, wa3, wa4);
+    
     if (*info == 5)
 	   *info = 4;
 }

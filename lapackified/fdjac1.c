@@ -77,12 +77,6 @@
  *         least n, then the jacobian is considered dense, and wa2 is 
  *         not referenced. 
  *
- *     subprograms called 
- *
- *       minpack-supplied ... dpmpar 
- *
- *       fortran-supplied ... dabs,dmax1,dsqrt 
- *
  *     argonne national laboratory. minpack project. march 1980.
  *     burton s. garbow, kenneth e. hillstrom, jorge j. more
  */
