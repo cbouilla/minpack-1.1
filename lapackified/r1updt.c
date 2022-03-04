@@ -1,7 +1,5 @@
-#include <float.h>
-#include <math.h>
-
 #include "minpack.h"
+
 /*
  *     subroutine r1updt 
  *
@@ -88,20 +86,20 @@ void r1updt_(const int *m, const int *n, double *s, const int *ls, const double 
 
 		/* determine a givens rotation which eliminates the */
 		/* j-th element of v. */
-		double sin_, cos_, tau;
+		double sin, cos, tau;
 		double a = v[*n-1];
 		double b = v[j];
-		drotg_(&a, &b, &cos_, &sin_);
+		drotg_(&a, &b, &cos, &sin);
 		tau = b;
 
 		/* apply the transformation to v and store the information */
 		/* necessary to recover the givens rotation. */
-		v[*n-1] = sin_ * v[j] + cos_ * v[*n-1];
+		v[*n-1] = sin * v[j] + cos * v[*n-1];
 		v[j] = tau;
 
 		/* apply the transformation to s and extend the spike in w. */
 		int len = *m - j;
-		drot_(&len, &w[j], &c1, &s[jj], &c1, &cos_, &sin_);
+		drot_(&len, &w[j], &c1, &s[jj], &c1, &cos, &sin);
 	}
 
 	/* add the spike from the rank 1 update to w. */

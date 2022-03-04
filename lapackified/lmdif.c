@@ -1,7 +1,4 @@
-#include <stdlib.h>
-#include <float.h>
-#include <math.h>
-#include <assert.h>
+#include <stddef.h>
 
 #include "minpack.h"
 
