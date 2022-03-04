@@ -122,7 +122,8 @@ In this repository
 ==================
 
 This repository contains several versions of MINPACK-1 converted to in C and
-potentially altered by Charles Bouillaguet.  All errors are mostly hiw own!
+potentially altered by Charles Bouillaguet(charles.bouillaguet@lip6.fr).  All
+errors are his own!
 
 All versions should be drop-in replacement for the original Fortran code.
 
@@ -150,7 +151,7 @@ This is the original fortran code, along with the C tests.
 --------------
 
 The code in the `base/` folder has been obtained by converting the original
-fortran code to C (using f2c), restructuring the code to avoid most GOTOs,
+fortran code to C (using `f2c`), restructuring the code to avoid most GOTOs,
 and some manual editing.
 
 The `lmstr` (non-linear least squares with limited storage) function has not
@@ -160,9 +161,10 @@ The main difference with the Fortran code is that the `dpmpar` function has
 been removed, and replaced by constants from the `float.h` standard header.
 
 There are tiny differences between the constants hardcoded in `dpmpar` and the
-actual values (2.22044604926e-16 vs 2.2204460492503130808e-16 for machine epsilon). 
-*These changes alter the behavior of the code*. It makes two tests fail
-(do not converge). Without this change, the code generates *almost* the same numerical results.
+actual values (`2.22044604926e-16` vs `2.2204460492503130808e-16` for the
+actual machine epsilon of an IEE 754 `double`).  *These changes alter the
+behavior of the code*. It makes two tests fail(do not converge). Without this
+change, the code generates *almost* the same numerical results.
 
 The test suite has been updated to consider the two new failing tests
 as "known failures".
