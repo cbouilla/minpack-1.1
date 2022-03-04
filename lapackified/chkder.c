@@ -79,15 +79,7 @@
 void chkder_(const int *m, const int *n, double *x, double *fvec, double *fjac, 
 	const int *ldfjac, double *xp, double *fvecp, const int *mode, double *err)
 {
-	/* Parameter adjustments */
-	--err;
-	--fvecp;
-	--fvec;
-	--xp;
-	--x;
 	int fjac_dim1 = *ldfjac;
-	int fjac_offset = 1 + fjac_dim1 * 1;
-	fjac -= fjac_offset;
 
 	/* epsmch is the machine precision. */
 	double epsmch = MINPACK_EPSILON;
@@ -98,7 +90,7 @@ void chkder_(const int *m, const int *n, double *x, double *fvec, double *fjac,
 
 	switch (*mode) {
 	case 1:
-		for (int j = 1; j <= *n; ++j) {
+		for (int j = 0; j < *n; ++j) {
 			double temp = eps * fabs(x[j]);
 			if (temp == 0)
 				temp = eps;
@@ -107,16 +99,16 @@ void chkder_(const int *m, const int *n, double *x, double *fvec, double *fjac,
 		return;
 
 	case 2:
-		for (int i = 1; i <= *m; ++i)
+		for (int i = 0; i < *m; ++i)
 			err[i] = 0;
-		for (int j = 1; j <= *n; ++j) {
+		for (int j = 0; j < *n; ++j) {
 			double temp = fabs(x[j]);
 			if (temp == 0)
 				temp = 1;
-			for (int i = 1; i <= *m; ++i)
+			for (int i = 0; i < *m; ++i)
 				err[i] += temp * fjac[i + j * fjac_dim1];
 		}
-		for (int i = 1; i <= *m; ++i) {
+		for (int i = 0; i < *m; ++i) {
 			double temp = 1;
 			double d2 = fvecp[i] - fvec[i];
 			if (fvec[i] != 0 && fvecp[i] != 0 && fabs(d2) >= epsf * fabs(fvec[i])) {

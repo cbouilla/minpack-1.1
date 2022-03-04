@@ -39,8 +39,7 @@ MINPACK versions
 * The original MINPACK-1 Fortran version from 1980. https://www.netlib.org/minpack/
   
   Extensive original documentation. Extensive battery of tests (described in
-  Algorithm 566 from ACM TOMS). The original test code processed all test
-  problems and printed a summary that had to be manually inspected.
+  Algorithm 566 from ACM TOMS).
 
 
 * MINPACK-2. https://ftp.mcs.anl.gov/pub/MINPACK-2/
@@ -71,6 +70,53 @@ MINPACK versions
   there is an ongoing effort (as of 2022) to maintain a modern Fortran
   version of the original code.
 
+Testing Minpack
+===============
+
+Testing MINPACK is quite difficult.  The original test code processed all test
+problems and printed a summary that had to be manually inspected.  This is
+unsuitable for continuous integration.  However, this has the merit of
+existing already.  A basic approach consists in checking that the test
+programs generate the same output as the orginal MINPACK Fortran code. 
+
+It must be noted that this include cases where MINPACK actually fails to
+converge to a solution --- these are "known failures".
+
+
+Basic approach
+--------------
+The main problem is that checking that the test programs produce the exact
+same output as the original fortran code is not a viable solution.
+
+For instance, automatically translating the fortran code to C (using f2c) and
+compiling it yields the exact same results on x86 CPUs, but different results
+on Power8 CPUs (this happens both with gcc and clang).
+
+Also, compiling the C code using the "-O1" and "-O3" flags yields the same
+results on x86 CPUs, but different results on Power8 CPUs (this happens only
+with gcc, not clang).
+
+Are these bugs in f2c? Or bugs in gcc and clang on Power8? Or is it something
+else (badly defined language semantics)?
+
+Also, using BLAS and LAPACK make the whole thing even more complicated,
+because then numerical values depend on the actual BLAS used, and on
+specificities of the hardware.
+
+
+Refined approach
+----------------
+
+The test problems have (mostly) known solutions (as documented in ACM TOMS
+algorithm 566). A much better solution consists in checking that the test
+programs generate the "expected" outputs up to a certain precision --- or
+fail to converge when the original MINPACK also failed.
+
+This has the advantage of being tolerant to small deviations in the numerical
+results.
+
+However, this is still not bullet-proof, as discussed below.
+
 
 In this repository
 ==================
@@ -88,13 +134,10 @@ success or failure. This uses the "Test Anything Protocol" that originates
 from perl (using the `prove` test harness which is part of perl).  The new
 set of tests is thus suitable for Continuous Integration.
 
-It must be noted that the original Fortran code fails some tests. These
-are "known failures".
+When the original Fortran code fails to converge to the expected solution, the
+tests are maked as "known failure".
 
 Some limited benchmarking code has been added.
-
-Testing MINPACK is difficult. A list of known issues is discussed below.
-
 
 
 `fortran` version
@@ -119,9 +162,10 @@ been removed, and replaced by constants from the `float.h` standard header.
 There are tiny differences between the constants hardcoded in `dpmpar` and the
 actual values (2.22044604926e-16 vs 2.2204460492503130808e-16 for machine epsilon). 
 *These changes alter the behavior of the code*. It makes two tests fail
-(does not converge).
+(do not converge). Without this change, the code generates *almost* the same numerical results.
 
-The test suite has been updated to consider these as "known failures".
+The test suite has been updated to consider the two new failing tests
+as "known failures".
 
 Using a different compiler alters the behavior of the code (e.g. tests fail
 with `gcc`, succeed with `clang`). Changing compiler options may make some
@@ -132,7 +176,7 @@ test fails (e.g. pass with `-O1` but fail with `-O2`; actually observed with
 `lapackified` version
 ---------------------
 
-The code in the `lapackified` folder differs from the `base/` code as follows:
+The code in the `lapackified/` folder differs from the `base/` code as follows:
 
 - It uses LAPACK to compute QR factorizations and related operations. This
   reduces the amount of code (completely removes the `qrfac` function) and
@@ -144,16 +188,17 @@ The code in the `lapackified` folder differs from the `base/` code as follows:
 
 - The `hybrid` and `hybrj` functions are very similar; they have been merged.
 
-- Some functions have been converted to zero-indexed arrays.
-
+- All functions have been converted to zero-based indexing.
 
 All-in-all, the `lapackified` code is about 25% smaller and much faster than
 the `base` code.
 
-
 However, the actual numerical results will depend on the actual BLAS
-implementation.  Changing the BLAS library may make some tests fail.  The
-reference blas yields different numerical values than OpenBLAS. OpenBLAS is
-multi-threaded; changing the number of threads alters the numerical values.
-Running in `valgrind` using OpenBLAS changes the numerical values (this does
-not happen with the reference BLAS). 
+implementation.  Most BLAS libraries adjust to the underlying hardware.
+Therefore, numerical results may vary from machine to machine.
+
+The reference BLAS yields different numerical values than OpenBLAS/ATLAS. OpenBLAS
+is multi-threaded; changing the number of threads alters the numerical
+values. Running in `valgrind` using OpenBLAS or the ATLAS BLAS changes the
+numerical values. At least one test fails under valgrind (does not converge). 
+This does not happen with the reference BLAS. 

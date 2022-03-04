@@ -4,9 +4,6 @@ default: libminpack.a
 
 .phony: clean test bench
 
-CFLAGS += $(shell pkg-config --cflags blas lapack)
-LDLIBS += $(shell pkg-config --libs blas lapack)
-
 OBJS = enorm.o qrsolv.o fdjac2.o fdjac1.o lmpar.o dogleg.o r1updt.o r1mpyq.o \
        lmbase.o lmdif1.o lmdif.o lmder.o lmder1.o \
        hybrbase.o hybrd.o hybrj.o hybrd1.o hybrj1.o \

@@ -1,11 +1,11 @@
-CFLAGS = -Wall -Wextra -I.. -g
-LDLIBS = -lm 
+CFLAGS += -Wall -Wextra -I.. -g
+LDLIBS += -lm 
 
 CFLAGS += $(shell pkg-config --cflags blas lapack)
 LDLIBS += $(shell pkg-config --libs blas lapack)
 
-# LDFLAGS += -L.
-# LDLIBS += -llapack -lrefblas
+#LDFLAGS += -L.
+#LDLIBS += -llapack -lrefblas
 
 all: check
 
