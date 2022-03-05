@@ -60,7 +60,7 @@ void qform_(const int * m, const int * n, double * q, const int *ldq, double * w
 		}
 		q[k + k * q_dim1] = 1;
 		if (wa[k] == 0)
-			return;
+			continue;
 		for (int j = k; j <= *m; ++j) {
 			double sum = 0;
 			for (int i = k; i <= *m; ++i) 
