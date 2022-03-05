@@ -15,3 +15,8 @@
 /lapackified/tests/test_hybrj1
 /lapackified/tests/test_lmder1
 /lapackified/tests/test_lmdif1
+/f2ced/tests/test_chkder
+/f2ced/tests/test_hybrd1
+/f2ced/tests/test_hybrj1
+/f2ced/tests/test_lmder1
+/f2ced/tests/test_lmdif1
