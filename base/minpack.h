@@ -113,14 +113,14 @@ void chkder_(const int *m, const int *n, double *x,
 /***************************** internal MINPACK routines *****************************/
 
 /* This replaces dpmpar */
-#define MINPACK_EPSILON DBL_EPSILON
-#define MINPACK_DWARF   DBL_MIN
-#define MINPACK_GIANT   DBL_MAX
+// #define MINPACK_EPSILON DBL_EPSILON
+// #define MINPACK_DWARF   DBL_MIN
+// #define MINPACK_GIANT   DBL_MAX
 
 /* Original values in dpmpar */
-// #define MINPACK_EPSILON  2.22044604926e-16 
-// #define MINPACK_DWARF    2.22507385852e-308
-// #define MINPACK_GIANT    1.79769313485e308
+#define MINPACK_EPSILON  2.22044604926e-16 
+#define MINPACK_DWARF    2.22507385852e-308
+#define MINPACK_GIANT    1.79769313485e308
 
 
 double enorm_(const int *n, double const *x);

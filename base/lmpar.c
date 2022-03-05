@@ -124,7 +124,6 @@ void lmpar_(const int *n, double *r, const int *ldr, int *ipvt, double *diag,
 		if (nsing < *n)
 			wa1[j] = 0;
 	}
-	}
 
 	for (int k = 1; k <= nsing; ++k) {
 		int j = nsing - k + 1;
