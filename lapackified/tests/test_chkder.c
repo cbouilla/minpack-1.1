@@ -90,11 +90,15 @@ int main()
 			printf("ok %d - %s, n=%d, incorrect\n", ic+1, problem_name[nprob - 1], n);
 		else
 			printf("not ok %d - %s, n=%d, unexpected\n", ic+1, problem_name[nprob - 1], n);
+	
+		for (int i=0; i < n; i++)
+			printf("\t# err[%2d] = %.20g\n", i, err[i]);
 	}
 
 	printf("\n");
-	printf("# SUMMARY OF 14 TESTS OF CHKDER\n");
-	printf("# NPROB   N    STATUS     ERRMIN         ERRMAX\n");
+	printf("################################\n");
+	printf("# Summary of 14 tests of chkder\n");
+	printf("# nprob   n    status     errmin         errmax\n");
 	for (int i = 0; i < 14; ++i)
 		printf("# %5d%5d%5d%15.3f%15.3f\n", tests_chkder[i].nprob, tests_chkder[i].n, 
 			tests_chkder[i].correct, errmin[i], errmax[i]);

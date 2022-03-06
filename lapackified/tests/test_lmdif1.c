@@ -91,10 +91,17 @@ void do_test(int ic)
 		else
 			printf("not ok %d - %s (n = %d, m = %d, factor = %f)\n", ic + 1, problem_name[nprob - 1], n, m, factor);
 	}
+	
 	commentator(ic, x, fvec, ftol, ftol, nfev, njev, info);
+	
+	for (int i = 0; i < n; i++)
+		printf("\t# x[%2d] = %.20g\n", i, x[i]);
+	for (int i = 0; i < m; i++)
+		printf("\t# fvec[%2d] = %.20g\n", i, fvec[i]);
 }
 
-/* runs the usual collection of tests */
+
+/* Run the usual collection of tests */
 int main()
 {
 	/* TAP protocol */
@@ -103,9 +110,11 @@ int main()
 	for (int i = 0; i < 53; i++)
 		do_test(i);
 
-	printf("\n\n# Summary of 53 calls to lmdif1: \n\n");
+	printf("\n\n################################\n");
+	printf("# Summary of 53 calls to lmdif1: \n\n");
 	printf("#  test  nprob   n    m   nfev  njev  info  final l2 norm \n");
 	for (int i = 0; i < 53; i++)
 		printf("# %5d%5d%5d%5d%6d%6d%6d%16.7e\n", i + 1, np[i], na[i], ma[i], nf[i], nj[i], nx[i], fnm[i]);
+	
 	return EXIT_SUCCESS;
 }

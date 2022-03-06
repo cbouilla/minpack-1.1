@@ -38,12 +38,12 @@ void fcn(const int *n, const double *x, double *fvec, int *iflag)
 void do_test(int ic)
 {
 	double tol = sqrt(MINPACK_EPSILON);
-	double ftol = 1e-6;
+	double ftol = 1e-7;
 
-	double x[40];		// solution
-	double fvec[40];	// residuals
-	double wa[2660];	// work array
-	int lwa = 2660;
+	double x[50];		// solution
+	double fvec[50];	// residuals
+	double wa[4000];	// work array
+	int lwa = 4000;
 
 	// set problem instance
 	nprob = tests[ic].nprob;
@@ -77,6 +77,10 @@ void do_test(int ic)
 			printf("not ok %d - %s (n=%d, factor=%.0f)\n", ic + 1, problem_name[nprob - 1], n, factor);
 	}
 	printf("\t# norm of residual %15.7e\n", fnorm2);
+	for (int i = 0; i < n; i++)
+		printf("\t# x[%2d] = %.20g\n", i, x[i]);
+	for (int i = 0; i < n; i++)
+		printf("\t# fvec[%2d] = %.20g\n", i, fvec[i]);
 }
 
 /* runs the usual collection of tests */
@@ -87,7 +91,8 @@ int main(void)
 	for (int ic = 0; ic < 55; ic++)
 		do_test(ic);
 
-	printf("\n\n# Summary of 55 calls to hybrd1: \n\n");
+	printf("\n\n################################\n");
+	printf("# Summary of 55 calls to hybrd1: \n\n");
 	printf("#  test  nprob   n    nfev   info  final l2 norm \n");
 	for (int i = 0; i < 55; i++)
 		printf("# %5d%5d%5d%5d%5d%16.7e\n", i + 1, np[i], na[i], nf[i], nx[i], fnm[i]);

@@ -44,7 +44,7 @@ void fcn(const int *n, const double *x, double *fvec, double *fjac, const int *l
 void do_test(int ic)
 {
 	double tol = sqrt(MINPACK_EPSILON);
-	double ftol = 1e-6;
+	double ftol = 1e-7;
 
 	double x[40];		// solution
 	double fvec[40];	// residuals
@@ -90,6 +90,10 @@ void do_test(int ic)
 		printf("\t# WARNING: solver claimed failure (code %d)\n", info);
 
 	printf("\t# norm of residual %15.7e\n", fnorm2);
+	for (int i = 0; i < n; i++)
+		printf("\t# x[%2d] = %.20g\n", i, x[i]);
+	for (int i = 0; i < n; i++)
+		printf("\t# fvec[%2d] = %.20g\n", i, fvec[i]);
 }
 
 /* runs the usual collection of tests */
@@ -100,7 +104,8 @@ int main(void)
 	for (int ic = 0; ic < 55; ic++)
 		do_test(ic);
 
-	printf("\n\n# Summary of 55 calls to hybrj1: \n\n");
+	printf("\n\n################################\n");
+	printf("# Summary of 55 calls to hybrj1: \n\n");
 	printf("#  test  nprob   n    nfev   njev   info  final l2 norm \n");
 	for (int i = 0; i < 55; i++)
 		printf("# %5d%5d%5d%5d%5d%5d%16.7e\n", i + 1, np[i], na[i], nf[i], nj[i], nx[i], fnm[i]);

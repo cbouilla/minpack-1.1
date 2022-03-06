@@ -131,6 +131,7 @@ void r1updt_(const int *m, const int *n, double *s, const int *ls, const double 
 		w[i] += v[*n] * u[i];
 
 	/* eliminate the spike. */
+	jj = 1;
 	*sing = 0;
 	for (int j = 1; j <= *n - 1; ++j) {
 		if (w[j] != 0) {

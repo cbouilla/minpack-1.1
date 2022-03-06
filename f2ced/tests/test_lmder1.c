@@ -13,7 +13,7 @@
 
 #include "ls.h"
 
-int lmder1_known_failures[] = { 26, 27, 38, 40, -1 };
+int lmder1_known_failures[] = { 26, 38, 40, -1 };
 
 /* global variables */
 int nprob;

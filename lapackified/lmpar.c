@@ -107,10 +107,10 @@ void lmpar_(const int *n, double *r, const int *ldr, int *ipvt, double *diag,
 	int nsing = *n;
 	for (int j = 0; j < *n; ++j) {
 		wa1[j] = qtb[j];
-		if (r[j + j * r_dim1] == 0) {
+		if (r[j + j * r_dim1] == 0)
 			nsing = j;
-			break;
-		}
+		if (nsing < *n)
+			wa1[j] = 0;
 	}
 
 	int c1 = 1;

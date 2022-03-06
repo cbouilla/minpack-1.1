@@ -1,8 +1,8 @@
 CFLAGS += -Wall -Wextra -I.. -g
 LDLIBS += -lm 
 
-CFLAGS += $(shell pkg-config --cflags blas lapack)
-LDLIBS += $(shell pkg-config --libs blas lapack)
+# CFLAGS += $(shell pkg-config --cflags blas lapack)
+# LDLIBS += $(shell pkg-config --libs blas lapack)
 
 #LDFLAGS += -L.
 #LDLIBS += -llapack -lrefblas

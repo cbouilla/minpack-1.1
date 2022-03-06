@@ -86,11 +86,15 @@ converge to a solution --- these are "known failures".
 Basic approach
 --------------
 The main problem is that checking that the test programs produce the exact
-same output as the original fortran code is not a viable solution.
+same output as the original fortran code is only a partial solution.  It
+allows to check whether some code produces the exact same result as the
+original. This was used to check that manually editing the C code did not
+introduce bugs.
 
-For instance, automatically translating the fortran code to C (using f2c) and
-compiling it yields the exact same results on x86 CPUs, but different results
-on Power8 CPUs (this happens both with gcc and clang).
+This detects bizare situations.  For instance, automatically translating the
+fortran code to C (using f2c) and compiling it yields the exact same results
+on x86 CPUs, but different results on Power8 CPUs (this happens both with gcc
+and clang).
 
 Also, compiling the C code using the "-O1" and "-O3" flags yields the same
 results on x86 CPUs, but different results on Power8 CPUs (this happens only
@@ -99,9 +103,10 @@ with gcc, not clang).
 Are these bugs in f2c? Or bugs in gcc and clang on Power8? Or is it something
 else (badly defined language semantics)?
 
-Also, using BLAS and LAPACK make the whole thing even more complicated,
-because then numerical values depend on the actual BLAS used, and on
-specificities of the hardware.
+However, very minor modifications to the code yield different numetrical
+values. This is unsuitable to test them.  Also, using BLAS and LAPACK make
+the whole thing even more complicated, because then numerical values depend
+on the actual BLAS used, and on specificities of the hardware.
 
 
 Refined approach
@@ -147,6 +152,13 @@ Some limited benchmarking code has been added.
 This is the original fortran code, along with the C tests.
 
 
+`f2ced` version
+-----------------
+
+This is the result of converting the original Fortran code to C using f2c, 
+along with the C tests.
+
+
 `base` version
 --------------
 
@@ -163,11 +175,7 @@ been removed, and replaced by constants from the `float.h` standard header.
 There are tiny differences between the constants hardcoded in `dpmpar` and the
 actual values (`2.22044604926e-16` vs `2.2204460492503130808e-16` for the
 actual machine epsilon of an IEE 754 `double`).  *These changes alter the
-behavior of the code*. It makes two tests fail(do not converge). Without this
-change, the code generates *almost* the same numerical results.
-
-The test suite has been updated to consider the two new failing tests
-as "known failures".
+behavior of the code*.
 
 Using a different compiler alters the behavior of the code (e.g. tests fail
 with `gcc`, succeed with `clang`). Changing compiler options may make some
