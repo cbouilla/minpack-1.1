@@ -1,9 +1,3 @@
-/* Declarations for minpack */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /************************* user-supplied functions *********************************/
 
 /* 
@@ -152,7 +146,3 @@ void qform_(const int *m, const int *n, double *q, const int *ldq, double *wa);
 void dogleg_(const int *n, double *r__, const int *lr, 
 	const double *diag, const double *qtb, const double *delta, 
     double *x, double *wa1, double *wa2);
-
-#ifdef __cplusplus
-}
-#endif

@@ -28,7 +28,7 @@ int njev;
 int nprob;
 
 /* This function is called by the solver and obeys the Fortran calling convention */
-void fcn(int *m, int *n, double *x, double *fvec, int *iflag)
+void fcn(const int *m, const int *n, const double *x, double *fvec, int *iflag)
 {
 	(void) m;
 	vecfcn(*n, x, fvec, nprob);
