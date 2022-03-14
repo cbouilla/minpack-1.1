@@ -1,6 +1,6 @@
 #include <stddef.h>
 
-#include "minpack.h"
+#include "cminpack.h"
 
 /*
  *     Subroutine lmder 
@@ -169,13 +169,15 @@
  *     Argonne National Laboratory.  MINPACK project.  March 1980. 
  *     Burton S. Garbow, Kenneth E. Hillstrom, Jorge J. Moré 
 */
-void lmder_(minpack_func_mnj fcn, const int *m, const int *n, double *x, 
-	double *fvec, double *fjac, const int *ldfjac, const double *ftol,
-	const double *xtol, const double *gtol, const int *maxfev, 
-    double *diag, const int *mode, const double *factor, const int *nprint, 
-    int *info, int *nfev, int *njev, int *ipvt, double *qtf, 
+int lmder(cminpack_func_mnj fcn, void *farg, int m, int n, double *x, 
+	double *fvec, double *fjac, int ldfjac, double ftol,
+	double xtol, double gtol, int maxfev, 
+    double *diag, int mode, double factor, int nprint, 
+     int *nfev, int *njev, int *ipvt, double *qtf, 
 	double *wa1, double *wa2, double *wa3, double *wa4)
 {
-    lmbase(fcn, NULL, m, n, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, NULL, 
-    diag, mode, factor, nprint, info, nfev, njev, ipvt, qtf, wa1, wa2, wa3, wa4);
+    int info;
+    info = lmbase(fcn, NULL, farg, m, n, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, 0, 
+    diag, mode, factor, nprint, nfev, njev, ipvt, qtf, wa1, wa2, wa3, wa4);
+    return info;
 }

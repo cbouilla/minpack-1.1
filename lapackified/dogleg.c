@@ -1,6 +1,6 @@
 #include <math.h>
 
-#include "minpack.h"
+#include "cminpack.h"
 /*
  *     subroutine dogleg 
  *
@@ -50,23 +50,22 @@
  *     argonne national laboratory. minpack project. march 1980. 
  *     burton s. garbow, kenneth e. hillstrom, jorge j. more 
  */
-void dogleg_(const int *n, double *r, const int *lr,
-	     const double *diag, const double *qtb, const double *delta,
-	     double *x, double *wa1, double *wa2)
+void dogleg(int n, double * r, int lr, const double *diag, const double *qtb, 
+		double delta, double *x, double *wa1, double *wa2)
 {
-	(void)lr;
+	(void) lr;
 
 	/* epsmch is the machine precision. */
 	double epsmch = MINPACK_EPSILON;
 
 	/* first, calculate the gauss-newton direction. */
-	int jj = *n * (*n + 1) / 2;
-	for (int k = 1; k <= *n; ++k) {
-		int j = *n - k;
+	int jj = n * (n + 1) / 2;
+	for (int k = 1; k <= n; ++k) {
+		int j = n - k;
 		jj -= k;
 		int l = jj + 1;
 		double sum = 0;
-		for (int i = j+1; i < *n; ++i) {
+		for (int i = j+1; i < n; ++i) {
 			sum += r[l] * x[i];
 			++l;
 		}
@@ -75,7 +74,7 @@ void dogleg_(const int *n, double *r, const int *lr,
 			int l = j;
 			for (int i = 1; i < j; ++i) {
 				temp = fmax(temp, fabs(r[l]));
-				l += *n - i;
+				l += n - i;
 			}
 			temp = epsmch * temp;
 			if (temp == 0)
@@ -85,19 +84,19 @@ void dogleg_(const int *n, double *r, const int *lr,
 	}
 
 	/* test whether the gauss-newton direction is acceptable. */
-	for (int j = 0; j < *n; ++j) {
+	for (int j = 0; j < n; ++j) {
 		wa1[j] = 0;
 		wa2[j] = diag[j] * x[j];
 	}
-	double qnorm = enorm_(n, wa2);
-	if (qnorm <= *delta)
+	double qnorm = enorm(n, wa2);
+	if (qnorm <= delta)
 		return;
 
 	/* the gauss-newton direction is not acceptable. */
 	/* next, calculate the scaled gradient direction. */
 	int l = 0;
-	for (int j = 0; j < *n; ++j) {
-		for (int i = j; i < *n; ++i) {
+	for (int j = 0; j < n; ++j) {
+		for (int i = j; i < n; ++i) {
 			wa1[i] += r[l] * qtb[j];
 			++l;
 		}
@@ -106,47 +105,47 @@ void dogleg_(const int *n, double *r, const int *lr,
 
 	/* calculate the norm of the scaled gradient and test for */
 	/* the special case in which the scaled gradient is zero. */
-	double gnorm = enorm_(n, wa1);
+	double gnorm = enorm(n, wa1);
 	double sgnorm = 0;
-	double alpha = *delta / qnorm;
+	double alpha = delta / qnorm;
 	
 	if (gnorm > 0) {
 		/* calculate the point along the scaled gradient */
 		/* at which the quadratic is minimized. */
-		for (int j = 0; j < *n; ++j)
+		for (int j = 0; j < n; ++j)
 			wa1[j] = wa1[j] / gnorm / diag[j];
 		l = 0;
-		for (int j = 0; j < *n; ++j) {
+		for (int j = 0; j < n; ++j) {
 			double sum = 0;
-			for (int i = j; i < *n; ++i) {
+			for (int i = j; i < n; ++i) {
 				sum += r[l] * wa1[i];
 				++l;
 			}
 			wa2[j] = sum;
 		}
-		double temp = enorm_(n, wa2);
+		double temp = enorm(n, wa2);
 		sgnorm = gnorm / temp / temp;
 
 		/* test whether the scaled gradient direction is acceptable. */
 		alpha = 0;
-		if (sgnorm < *delta) {
+		if (sgnorm < delta) {
 			/* the scaled gradient direction is not acceptable. */
 			/* finally, calculate the point along the dogleg */
 			/* at which the quadratic is minimized. */
-			double bnorm = enorm_(n, qtb);
-			double tmp = bnorm / gnorm * (bnorm / qnorm) * (sgnorm / *delta);
-			double d1 = sgnorm / *delta;
-			double d2 = tmp - *delta / qnorm;
-			double d3 = *delta / qnorm;
-			double d4 = sgnorm / *delta;
-			double tmp2 = tmp - *delta / qnorm * (d1 * d1) + sqrt(d2 * d2 + (1 - d3 * d3) * (1 - d4 * d4));
-			double d5 = sgnorm / *delta;
-			alpha = *delta / qnorm * (1 - d5 * d5) / tmp2;
+			double bnorm = enorm(n, qtb);
+			double tmp = bnorm / gnorm * (bnorm / qnorm) * (sgnorm / delta);
+			double d1 = sgnorm / delta;
+			double d2 = tmp - delta / qnorm;
+			double d3 = delta / qnorm;
+			double d4 = sgnorm / delta;
+			double tmp2 = tmp - delta / qnorm * (d1 * d1) + sqrt(d2 * d2 + (1 - d3 * d3) * (1 - d4 * d4));
+			double d5 = sgnorm / delta;
+			alpha = delta / qnorm * (1 - d5 * d5) / tmp2;
 		}
 	}
 	/* form appropriate convex combination of the gauss-newton */
 	/* direction and the scaled gradient direction. */
-	double tmp = (1 - alpha) * fmin(sgnorm, *delta);
-	for (int j = 0; j < *n; ++j)
+	double tmp = (1 - alpha) * fmin(sgnorm, delta);
+	for (int j = 0; j < n; ++j)
 		x[j] = tmp * wa1[j] + alpha * x[j];
 }

@@ -1,6 +1,7 @@
+#include <stddef.h>
 #include <math.h>
 
-#include "minpack.h"
+#include "cminpack.h"
 
 /*
  *     subroutine fdjac1 
@@ -79,32 +80,29 @@
  *     argonne national laboratory. minpack project. march 1980.
  *     burton s. garbow, kenneth e. hillstrom, jorge j. more
  */
-void fdjac1_(minpack_func_n fcn, const int *n, double *x, double *fvec,
-	    double *fjac, const int *ldfjac, int *iflag, const int *ml,
-	    const int *mu, const double *epsfcn, double *wa1, double *wa2)
+int fdjac1(cminpack_func_n fcn, void *farg, int n, double *x, double *fvec,
+	    double *fjac, int ldfjac, int iflag, double epsfcn, double *wa1, double *wa2)
 {
-	(void) ml;
-    (void) mu;
     (void) wa2;
-    int fjac_dim1 = *ldfjac;
+    ptrdiff_t fjac_dim1 = ldfjac;
 
 	/* epsmch is the machine precision. */
 	double epsmch = MINPACK_EPSILON;
-	double eps = sqrt(fmax(*epsfcn, epsmch));
+	double eps = sqrt(fmax(epsfcn, epsmch));
 	
 	/* computation of dense approximate jacobian. */
-	for (int j = 0; j < *n; ++j) {
+	for (int j = 0; j < n; ++j) {
 		double temp = x[j];
 		double h = eps * fabs(temp);
 		if (h == 0)
 			h = eps;
 		x[j] = temp + h;
-		(*fcn) (n, x, wa1, iflag);
-		if (*iflag < 0)
-			return;
+		iflag = (*fcn) (farg, n, x, wa1, iflag);
+		if (iflag < 0)
+			return iflag;
 		x[j] = temp;
-		for (int i = 0; i < *n; ++i)
+		for (int i = 0; i < n; ++i)
 			fjac[i + j * fjac_dim1] = (wa1[i] - fvec[i]) / h;
 	}
-	return;
+	return iflag;
 }

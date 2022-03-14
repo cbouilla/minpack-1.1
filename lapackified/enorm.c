@@ -1,4 +1,6 @@
-#include "minpack.h"
+#include <cblas.h>
+
+#include "cminpack.h"
 
 /*
  *     function enorm
@@ -36,8 +38,7 @@
  *     burton s. garbow, kenneth e. hillstrom, jorge j. more
  */
 
-double enorm_(const int *n, double const *x)
+double enorm(int n, double const *x)
 {
-	int incx = 1;
-	return dnrm2_(n, x, &incx);
+	return cblas_dnrm2(n, x, 1);
 }

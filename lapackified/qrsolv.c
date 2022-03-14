@@ -1,6 +1,7 @@
 #include <math.h>
+#include <cblas.h>
 
-#include "minpack.h"
+#include "cminpack.h"
 
 /*
  *     subroutine qrsolv 
@@ -78,22 +79,21 @@
  *     burton s. garbow, kenneth e. hillstrom, jorge j. more 
  */
 
-void qrsolv_(const int *n, double *r, const int *ldr, int *ipvt, double *diag, double *qtb, double *x, double *sdiag, double *wa)
+void qrsolv(int n, double *r, int ldr, int *ipvt, double *diag, double *qtb, double *x, double *sdiag, double *wa)
 {
-	int r_dim1 = *ldr;
-	int c1 = 1;
+	ptrdiff_t r_dim1 = ldr;
 
 	/* copy R and (Q transpose)*b to preserve input and initialize S. */
 	/* in particular, save the diagonal elements of R in x. */
-	for (int j = 0; j < *n; ++j) {
- 		for (int i = j; i < *n; ++i)
+	for (int j = 0; j < n; ++j) {
+ 		for (int i = j; i < n; ++i)
  			r[i + j * r_dim1] = r[j + i * r_dim1];
 		x[j] = r[j + j * r_dim1];
 		wa[j] = qtb[j];
 	}
 
 	/* eliminate the diagonal matrix D using a givens rotation. */
-	for (int j = 0; j < *n; ++j) {
+	for (int j = 0; j < n; ++j) {
 
 		/* prepare the row of D to be eliminated, locating the */
 		/* diagonal element using P from the QR factorization. */
@@ -101,7 +101,7 @@ void qrsolv_(const int *n, double *r, const int *ldr, int *ipvt, double *diag, d
 		if (diag[l] == 0)
 			continue;
 
-		for (int k = j; k < *n; ++k)
+		for (int k = j; k < n; ++k)
 			sdiag[k] = 0;
 		sdiag[j] = diag[l];
 
@@ -110,7 +110,7 @@ void qrsolv_(const int *n, double *r, const int *ldr, int *ipvt, double *diag, d
 		/* beyond the first n, which is initially zero. */
 		double qtbpj = 0;
 
-		for (int k = j; k < *n; ++k) {
+		for (int k = j; k < n; ++k) {
 			/* determine a givens rotation which eliminates the */
 			/* appropriate element in the current row of d. */
 			if (sdiag[k] == 0)
@@ -119,7 +119,7 @@ void qrsolv_(const int *n, double *r, const int *ldr, int *ipvt, double *diag, d
 			double cos, sin;
 			double a = r[k + k * r_dim1];
 			double b = sdiag[k];
-			drotg_(&a, &b, &cos, &sin);
+			cblas_drotg(&a, &b, &cos, &sin);
 
 			/* compute the modified diagonal element of r and */
 			/* the modified element of ((q transpose)*b,0). */
@@ -129,25 +129,25 @@ void qrsolv_(const int *n, double *r, const int *ldr, int *ipvt, double *diag, d
 			wa[k] = temp;
 
 			/* accumulate the transformation in the row of s. */
-			int len = *n - (k+1);
-			drot_(&len, &r[k+1 + k * r_dim1], &c1, &sdiag[k+1], &c1, &cos, &sin);
+			int len = n - (k+1);
+			cblas_drot(len, &r[k+1 + k * r_dim1], 1, &sdiag[k+1], 1, cos, sin);
 		}
 	}
 
 	/* solve the triangular system for z. if the system is
 	   singular, then obtain a least squares solution. */
-	int nsing = *n;
-	for (int j = 0; j < *n; ++j) {
+	int nsing = n;
+	for (int j = 0; j < n; ++j) {
 		if (r[j + j * r_dim1] == 0) {
 			nsing = j;
 			break;
 		}
 	}
-	for (int j = nsing + 1; j < *n; ++j)
+	for (int j = nsing + 1; j < n; ++j)
 		wa[j] = 0;
-	dtrsv_("Upper-triangular", "Non-Transpose", "Non-Unit diagonal", &nsing, r, ldr, wa, &c1);
+	cblas_dtrsv(CblasColMajor, CblasUpper, CblasNoTrans, CblasNonUnit, nsing, r, ldr, wa, 1);
 
-	for (int j = 0; j < *n; ++j) {
+	for (int j = 0; j < n; ++j) {
 		/* store the diagonal element of s and restore
 		   the corresponding diagonal element of R. */
 		sdiag[j] = r[j + j * r_dim1];
@@ -155,7 +155,7 @@ void qrsolv_(const int *n, double *r, const int *ldr, int *ipvt, double *diag, d
 	}
 
 	/* permute the components of z back to components of x. */
-	for (int j = 0; j < *n; ++j) {
+	for (int j = 0; j < n; ++j) {
 		int l = ipvt[j] - 1;
 		x[l] = wa[j];
 	}

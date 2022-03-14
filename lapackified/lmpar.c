@@ -1,6 +1,8 @@
 #include <math.h>
+#include <stddef.h>
+#include <cblas.h>
 
-#include "minpack.h"
+#include "cminpack.h"
 
 /*
  *     subroutine lmpar 
@@ -95,27 +97,27 @@
  *     burton s. garbow, kenneth e. hillstrom, jorge j. more 
  */
 
-void lmpar_(const int *n, double *r, const int *ldr, int *ipvt, double *diag, 
-	double *qtb, double *delta, double *par, double *x, double *sdiag, double *wa1, double *wa2)
+double lmpar(int n, double *r, int ldr, int *ipvt, double *diag, 
+	double *qtb, double delta, double *x, double *sdiag, double *wa1, double *wa2)
 {
 	/* dwarf is the smallest positive magnitude. */
 	double dwarf = MINPACK_DWARF;
-	int r_dim1 = *ldr;
+	ptrdiff_t r_dim1 = ldr;
+	double par = 0;
 
 	/* Compute and store in x the gauss-newton direction. If the
 	   jacobian is rank-deficient, obtain a least squares solution. */
-	int nsing = *n;
-	for (int j = 0; j < *n; ++j) {
+	int nsing = n;
+	for (int j = 0; j < n; ++j) {
 		wa1[j] = qtb[j];
 		if (r[j + j * r_dim1] == 0)
 			nsing = j;
-		if (nsing < *n)
+		if (nsing < n)
 			wa1[j] = 0;
 	}
 
-	int c1 = 1;
-	dtrsv_("Up", "notrans", "nounit", &nsing, r, ldr, wa1, &c1);
-	for (int j = 0; j < *n; ++j) {
+	cblas_dtrsv(CblasColMajor, CblasUpper, CblasNoTrans, CblasNonUnit, nsing, r, ldr, wa1, 1);
+	for (int j = 0; j < n; ++j) {
 		int l = ipvt[j] - 1;
 		x[l] = wa1[j];
 	}
@@ -124,95 +126,95 @@ void lmpar_(const int *n, double *r, const int *ldr, int *ipvt, double *diag,
 	   evaluate the function at the origin, and test
 	   for acceptance of the gauss-newton direction. */
 	int iter = 0;
-	for (int j = 0; j < *n; ++j)
+	for (int j = 0; j < n; ++j)
 		wa2[j] = diag[j] * x[j];
-	double dxnorm = enorm_(n, wa2);
-	double fp = dxnorm - *delta;
-	if (fp <= 0.1 * *delta)
+	double dxnorm = enorm(n, wa2);
+	double fp = dxnorm - delta;
+	if (fp <= 0.1 * delta)
 		goto fini;
 
 	/* if the jacobian is not rank deficient, the newton
 	   step provides a lower bound, parl, for the zero of
 	   the function.  Otherwise set this bound to zero. */
 	double parl = 0;
-	if (nsing >= *n) {
-		for (int j = 0; j < *n; ++j) {
+	if (nsing >= n) {
+		for (int j = 0; j < n; ++j) {
 			int l = ipvt[j] - 1;
 			wa1[j] = diag[l] * (wa2[l] / dxnorm);
 		}
-		dtrsv_("Up", "trans", "nounit", &nsing, r, ldr, wa1, &c1);
-		double temp = enorm_(n, wa1);
-		parl = fp / *delta / temp / temp;
+		cblas_dtrsv(CblasColMajor, CblasUpper, CblasTrans, CblasNonUnit, nsing, r, ldr, wa1, 1);
+		double temp = enorm(n, wa1);
+		parl = fp / delta / temp / temp;
 	}
 
 	/* Calculate an upper bound, paru, for the zero of the function. */
-	for (int j = 0; j < *n; ++j) {
+	for (int j = 0; j < n; ++j) {
 		double sum = 0;
 		for (int i = 0; i < j; ++i)
 			sum += r[i + j * r_dim1] * qtb[i];
 		int l = ipvt[j] - 1;
 		wa1[j] = sum / diag[l];
 	}
-	double gnorm = enorm_(n, wa1);
-	double paru = gnorm / *delta;
+	double gnorm = enorm(n, wa1);
+	double paru = gnorm / delta;
 	if (paru == 0)
-		paru = dwarf / fmin(*delta, 0.1);
+		paru = dwarf / fmin(delta, 0.1);
 
 	/* if the input par lies outside of the interval (parl,paru),
 	   set par to the closer endpoint. */
-	*par = fmax(*par, parl);
-	*par = fmin(*par, paru);
-	if (*par == 0)
-		*par = gnorm / dxnorm;
+	par = fmax(par, parl);
+	par = fmin(par, paru);
+	if (par == 0)
+		par = gnorm / dxnorm;
 
 	/* beginning of an iteration. */
 	for (;;) {
 		++iter;
 		/* evaluate the function at the current value of par. */
-		if (*par == 0)
-			*par = fmax(dwarf, 0.001 * paru);
-		double temp = sqrt(*par);
-		for (int j = 0; j < *n; ++j)
+		if (par == 0)
+			par = fmax(dwarf, 0.001 * paru);
+		double temp = sqrt(par);
+		for (int j = 0; j < n; ++j)
 			wa1[j] = temp * diag[j];
-		qrsolv_(n, r, ldr, ipvt, wa1, qtb, x, sdiag, wa2);
-		for (int j = 0; j < *n; ++j)
+		qrsolv(n, r, ldr, ipvt, wa1, qtb, x, sdiag, wa2);
+		for (int j = 0; j < n; ++j)
 			wa2[j] = diag[j] * x[j];
-		dxnorm = enorm_(n, wa2);
+		dxnorm = enorm(n, wa2);
 		temp = fp;
-		fp = dxnorm - *delta;
+		fp = dxnorm - delta;
 
 		/* if the function is small enough, accept the current value
 		   of par. also test for the exceptional cases where parl
 		   is zero or the number of iterations has reached 10. */
-		if (fabs(fp) <= 0.1 * *delta || (parl == 0 && fp <= temp && temp < 0) || iter == 100)
+		if (fabs(fp) <= 0.1 * delta || (parl == 0 && fp <= temp && temp < 0) || iter == 100)
 			break;
 
 		/* compute the newton correction. */
-		for (int j = 0; j < *n; ++j) {
+		for (int j = 0; j < n; ++j) {
 			int l = ipvt[j] - 1;
 			wa1[j] = diag[l] * (wa2[l] / dxnorm);
 		}
 		/* cannot use dtrsv here because the diagonal is in sdiag, not in r */
-		for (int j = 0; j < *n; ++j) {
+		for (int j = 0; j < n; ++j) {
 			wa1[j] /= sdiag[j];
-			for (int i = j + 1; i < *n; ++i)
+			for (int i = j + 1; i < n; ++i)
 				wa1[i] -= r[i + j * r_dim1] *  wa1[j];
 		}
-		temp = enorm_(n, wa1);
-		double parc = fp / *delta / temp / temp;
+		temp = enorm(n, wa1);
+		double parc = fp / delta / temp / temp;
 
 		/* Depending on the sign of the function, update parl or paru. */
 		if (fp > 0)
-			parl = fmax(parl, *par);
+			parl = fmax(parl, par);
 		if (fp < 0)
-			paru = fmin(paru, *par);
+			paru = fmin(paru, par);
 
 		/* Compute an improved estimate for par. */
-		*par = fmax(parl, *par + parc);
+		par = fmax(parl, par + parc);
 
 	}
  fini:
-	/* termination. */
-	if (iter == 0)
-		*par = 0;
+ 	if (iter == 0)
+ 		par = 0;
+	return par;
 }

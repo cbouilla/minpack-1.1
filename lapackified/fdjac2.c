@@ -1,6 +1,7 @@
+#include <stddef.h>
 #include <math.h>
 
-#include "minpack.h"
+#include "cminpack.h"
 
  /*
   *     subroutine fdjac2 
@@ -76,27 +77,28 @@
   *     burton s. garbow, kenneth e. hillstrom, jorge j. more 
   */
 
-void fdjac2_(minpack_func_mn fcn, const int *m, const int *n, double *x,
-	    double const *fvec, double *fjac, const int *ldfjac, int *iflag,
-	    const double *epsfcn, double *wa)
+int fdjac2(cminpack_func_mn fcn, void *farg, int m, int n, double *x,
+	    double const *fvec, double *fjac, int ldfjac, int iflag,
+	    double epsfcn, double *wa)
 {
-	int fjac_dim1 = *ldfjac;
+	ptrdiff_t fjac_dim1 = ldfjac;
 
 	/* epsmch is the machine precision. */
 	double epsmch = MINPACK_EPSILON;
 
-	double eps = sqrt(fmax(*epsfcn, epsmch));
-	for (int j = 0; j < *n; ++j) {
+	double eps = sqrt(fmax(epsfcn, epsmch));
+	for (int j = 0; j < n; ++j) {
 		double temp = x[j];
 		double h = eps * fabs(x[j]);
 		if (h == 0)
 			h = eps;
 		x[j] += h;
-		(*fcn)(m, n, x, wa, iflag);
-		if (*iflag < 0)
-			return;
+		iflag = (*fcn)(farg, m, n, x, wa, iflag);
+		if (iflag < 0)
+			return iflag;
 		x[j] = temp;              // restore x[j]
-		for (int i = 0; i < *m; ++i)
+		for (int i = 0; i < m; ++i)
 			fjac[i + j * fjac_dim1] = (wa[i] - fvec[i]) / h;
 	}
+    return iflag;
 }

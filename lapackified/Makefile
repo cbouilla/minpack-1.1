@@ -7,9 +7,9 @@ default: libminpack.a
 OBJS = enorm.o qrsolv.o fdjac2.o fdjac1.o lmpar.o dogleg.o r1updt.o r1mpyq.o \
        lmbase.o lmdif1.o lmdif.o lmder.o lmder1.o \
        hybrbase.o hybrd.o hybrj.o hybrd1.o hybrj1.o \
-       chkder.o
+       chkder.o fortran_interface.o
 
-$(OBJS): minpack.h
+$(OBJS): minpack.h cminpack.h
 
 libminpack.a:  $(OBJS)
 	ar r $@ $(OBJS); ranlib $@

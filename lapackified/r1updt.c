@@ -1,4 +1,6 @@
-#include "minpack.h"
+#include <cblas.h>
+
+#include "cminpack.h"
 
 /*
  *     subroutine r1updt 
@@ -59,27 +61,25 @@
  *     Argonne National Laboratory.  MINPACK project.  March 1980. 
  *     Burton S. Garbow, Kenneth E. Hillstrom, Jorge J. Moré, John L. Nazareth 
  */
-void r1updt_(const int *m, const int *n, double *s, const int *ls, const double *u, double *v,
-	     double *w, int *sing)
+int r1updt(int m, int n, double *s, int ls, const double *u, double *v, double *w)
 {
-	(void)ls;
-	int c1 = 1;
+	(void) ls;
 
 	/* initialize the diagonal element pointer. */
-	int jj = *n * ((*m * 2) - *n + 1) / 2 - (*m - *n) - 1;
+	int jj = n * ((m * 2) - n + 1) / 2 - (m - n) - 1;
 
 	/* move the nontrivial part of the last column of s into w. */
 	int l = jj;
-	for (int i = *n - 1; i < *m; ++i) {
+	for (int i = n - 1; i < m; ++i) {
 		w[i] = s[l];
 		++l;
 	}
 
 	/* rotate the vector v into a multiple of the n-th unit vector */
 	/* in such a way that a spike is introduced into w. */
-	for (int nmj = 1; nmj <= *n - 1; ++nmj) {
-		int j = *n - nmj - 1;
-		jj -= *m - j;
+	for (int nmj = 1; nmj <= n - 1; ++nmj) {
+		int j = n - nmj - 1;
+		jj -= m - j;
 		w[j] = 0;
 		if (v[j] == 0)
 			continue;
@@ -87,41 +87,41 @@ void r1updt_(const int *m, const int *n, double *s, const int *ls, const double 
 		/* determine a givens rotation which eliminates the */
 		/* j-th element of v. */
 		double sin, cos, tau;
-		double a = v[*n-1];
+		double a = v[n-1];
 		double b = v[j];
-		drotg_(&a, &b, &cos, &sin);
+		cblas_drotg(&a, &b, &cos, &sin);
 		tau = b;
 
 		/* apply the transformation to v and store the information */
 		/* necessary to recover the givens rotation. */
-		v[*n-1] = sin * v[j] + cos * v[*n-1];
+		v[n-1] = sin * v[j] + cos * v[n-1];
 		v[j] = tau;
 
 		/* apply the transformation to s and extend the spike in w. */
-		int len = *m - j;
-		drot_(&len, &w[j], &c1, &s[jj], &c1, &cos, &sin);
+		int len = m - j;
+		cblas_drot(len, &w[j], 1, &s[jj], 1, cos, sin);
 	}
 
 	/* add the spike from the rank 1 update to w. */
-	for (int i = 0; i < *m; ++i)
-		w[i] += v[*n-1] * u[i];
+	for (int i = 0; i < m; ++i)
+		w[i] += v[n-1] * u[i];
 
 	/* eliminate the spike. */
 	jj = 0;
-	*sing = 0;
-	for (int j = 0; j < *n - 1; ++j) {
+	int sing = 0;
+	for (int j = 0; j < n - 1; ++j) {
 		if (w[j] != 0) {
 			/* determine a givens rotation which eliminates the */
 			/* j-th element of the spike. */
 			double cos, sin;
 			double a = s[jj];
 			double b = w[j];
-			drotg_(&a, &b, &cos, &sin);
+			cblas_drotg(&a, &b, &cos, &sin);
 			double tau = b;
 
 			/* apply the transformation to s and reduce the spike in w. */
-			int len = *m - j;
-			drot_(&len, &s[jj], &c1, &w[j], &c1, &cos, &sin);
+			int len = m - j;
+			cblas_drot(len, &s[jj], 1, &w[j], 1, cos, sin);
 
 			/* store the information necessary to recover the givens rotation. */
 			w[j] = tau;
@@ -129,16 +129,17 @@ void r1updt_(const int *m, const int *n, double *s, const int *ls, const double 
 
 		/* test for zero diagonal elements in the output s. */
 		if (s[jj] == 0)
-			*sing = 1;
-		jj += *m - j;
+			sing = 1;
+		jj += m - j;
 	}
 
 	/* move w back into the last column of the output s. */
 	l = jj;
-	for (int i = *n - 1; i < *m; ++i) {
+	for (int i = n - 1; i < m; ++i) {
 		s[l] = w[i];
 		++l;
 	}
 	if (s[jj] == 0)
-		*sing = 1;
+		sing = 1;
+	return sing;
 }

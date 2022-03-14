@@ -1,6 +1,6 @@
 #include <stddef.h>
 
-#include "minpack.h"
+#include "cminpack.h"
 
 /*     subroutine lmdif
  *
@@ -172,13 +172,12 @@
  *     burton s. garbow, kenneth e. hillstrom, jorge j. more
  */
 
-void lmdif_(minpack_func_mn fcn, const int * m, const int * n, double * x,
-	   double * fvec, const double * ftol, const double * xtol, 
-	   const double *gtol, const int * maxfev, const double * epsfcn, double * diag,
-	   const int * mode, const double * factor, const int * nprint,
-	   int * info, int * nfev, double * fjac, const int * ldfjac, 
+int lmdif(cminpack_func_mn fcn, void *farg, int m, int n, double * x,
+	   double * fvec, double ftol, double xtol, double gtol, int maxfev, double epsfcn, 
+       double * diag,  int mode, double factor, int nprint,   int * nfev, double * fjac, int ldfjac, 
 	   int * ipvt, double * qtf, double * wa1, double * wa2, double * wa3, double * wa4)
 {	
-	lmbase(NULL, fcn, m, n, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, epsfcn, 
-    diag, mode, factor, nprint, info, nfev, NULL, ipvt, qtf, wa1, wa2, wa3, wa4);
+	int info = lmbase(NULL, fcn, farg, m, n, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, epsfcn, 
+    diag, mode, factor, nprint, nfev, NULL, ipvt, qtf, wa1, wa2, wa3, wa4);
+    return info;
 }

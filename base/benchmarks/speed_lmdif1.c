@@ -28,7 +28,7 @@ int njev;
 int nprob;
 
 /* This function is called by the solver and obeys the Fortran calling convention */
-void fcn(int *m, int *n, double *x, double *fvec, int *iflag)
+void fcn(const int *m, const int *n, const double *x, double *fvec, int *iflag)
 {
 	ssqfcn(*m, *n, x, fvec, nprob);
 	if (*iflag == 1)
@@ -41,7 +41,7 @@ void do_test(int nprob_, int n, int m, double factor)
 {
 	double tol = sqrt(MINPACK_EPSILON);
 
-	nprob = nprob_; /* jenrich and sampson function. n=2, m unlimited */
+	nprob = nprob_;
 	nfev = 0;
 	njev = 0;
 	
@@ -82,8 +82,8 @@ int main()
 	do_test(1, 1000, 1000, 1);
 	do_test(1, 1000, 10000, 1);
 	do_test(1, 1000, 100000, 1);
-	do_test(3, 1000, 1000, 1);
-	do_test(3, 1000, 10000, 1);
+	// do_test(3, 1000, 1000, 1);
+	// do_test(3, 1000, 10000, 1);
 	do_test(16, 1000, 1000, 1);
 	do_test(16, 3000, 3000, 1);
 	do_test(12, 3, 1000000, 1);

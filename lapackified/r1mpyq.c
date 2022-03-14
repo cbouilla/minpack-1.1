@@ -1,6 +1,8 @@
+#include <stddef.h>
 #include <math.h>
+#include <cblas.h>
 
-#include "minpack.h"
+#include "cminpack.h"
 /*
  *     Subroutine r1mpyq 
  *
@@ -44,14 +46,13 @@
  *     argonne national laboratory. minpack project. march 1980. 
  *     burton s. garbow, kenneth e. hillstrom, jorge j. more 
  */
-void r1mpyq_(const int *m, const int *n, double *a, const int *lda, double *v, double *w)
+void r1mpyq(int m, int n, double *a, int lda, double *v, double *w)
 {
-	int a_dim1 = *lda;
-	int c1 = 1;
+	ptrdiff_t a_dim1 = lda;
 
 	/* apply the first set of givens rotations to a. */	
-	for (int nmj = 1; nmj <= *n - 1; ++nmj) {
-		int j = *n - 1 - nmj;
+	for (int nmj = 1; nmj <= n - 1; ++nmj) {
+		int j = n - 1 - nmj;
 		double cos, sin;
 		if (fabs(v[j]) > 1) {
 			cos = 1 / v[j];
@@ -60,11 +61,11 @@ void r1mpyq_(const int *m, const int *n, double *a, const int *lda, double *v, d
 			sin = v[j];
 			cos = sqrt(1 - sin * sin);
 		}
-		drot_(m, &a[(*n-1) * a_dim1], &c1, &a[j * a_dim1], &c1, &cos, &sin);
+		cblas_drot(m, &a[(n-1) * a_dim1], 1, &a[j * a_dim1], 1, cos, sin);
 	}
 
 	/* apply the second set of givens rotations to a. */
-	for (int j = 0; j < *n - 1; ++j) {
+	for (int j = 0; j < n - 1; ++j) {
 		double cos, sin;
 		if (fabs(w[j]) > 1) {
 			cos = 1 / w[j];
@@ -73,6 +74,6 @@ void r1mpyq_(const int *m, const int *n, double *a, const int *lda, double *v, d
 			sin = w[j];
 			cos = sqrt(1 - sin * sin);
 		}
-		drot_(m, &a[j * a_dim1], &c1, &a[(*n-1) * a_dim1], &c1, &cos, &sin);
+		cblas_drot(m, &a[j * a_dim1], 1, &a[(n-1) * a_dim1], 1, cos, sin);
 	}
 }

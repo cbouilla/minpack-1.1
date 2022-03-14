@@ -25,62 +25,64 @@ char *problem_name[] = {
 	"Broyden banded function",
 };
 
+/* the nfev value is for hybrd1 */
 struct test_case tests[55] = {
-	{1, 2, 1,     22, 1, 0           },  // 01  
-	{1, 2, 10,     9, 1, 0           },  // 02
-	{1, 2, 100,    9, 1, .5373479E-12},  // 03
-	{2, 4, 1,    123, 4, .1736920E-34},  // 04
-	{2, 4, 10,   110, 4, .1828554E-32},  // 05
-	{2, 4, 100,  156, 4, .2539466E-34},  // 06
-	{3, 2, 1,    181, 1, .1712494E-08},  // 07
-	{3, 2, 10,    11, 1, .3744485E-07},  // 08
-	{4, 4, 1,     94, 1, .4005067E-10},  // 09
-	{4, 4, 10,   234, 1, .5154548E-09},  // 10
-	{4, 4, 100,  514, 1, .2491133E-10},  // 11
-	{5, 3, 1,     27, 1, .2753457E-12},  // 12
-	{5, 3, 10,    31, 1, .4427907E-13},  // 13
-	{5, 3, 100,   40, 1, .1610836E-12},  // 14
-	{6, 6, 1,     96, 1, .3191646E-12},  // 15
-	{6, 6, 10,   310, 1, .2336128E-10},  // 16
-	{6, 9, 1,    167, 1, .1817744E-13},  // 17
-	{6, 9, 10,   167, 1, .1138869E-11},  // 18
-	{7, 5, 1,     17, 1, .3540292E-11},  // 19
-	{7, 5, 10,   256, 1, .1902384E-09},  // 20
-	{7, 5, 100,  522, 1, .2269130E-10},  // 21
-	{7, 6, 1,     25, 1, .6841874E-09},  // 22
-	{7, 6, 10,   172, 1, .2281996E-10},  // 23
-	{7, 6, 100,  274, 1, .1260220E-10},  // 24
-	{7, 7, 1,     20, 1, .2398700E-08},  // 25
-	{7, 7, 10,   525, 1, .1624356E-09},  // 26
-	{7, 7, 100,  657, 4, .2416003E+00},  // 27
-	{7, 8, 1,    120, 4, .6440508E-01},  // 28
-	{7, 9, 1,     41, 1, .1889808E-08},  // 29
-	{8, 10, 1,    31, 1, .1312131E-13},  // 30
-	{8, 10, 10,   31, 1, .1601186E-13},  // 31
-	{8, 10, 100,  38, 1, .4213000E-14},  // 32
-	{8, 30, 1,   113, 1, .2073414E-12},  // 33
-	{8, 40, 1,   196, 1, .8885114E-13},  // 34
-	{9, 10, 1,    16, 1, .2497793E-14},  // 35
-	{9, 10, 10,   19, 1, .1725954E-12},  // 36
-	{9, 10, 100,  52, 1, .4174414E-09},  // 37
-	{10, 1, 1,     7, 1, .5551115E-16},  // 38
-	{10, 1, 10,    9, 1, .5551115E-16},  // 39
-	{10, 1, 100,  16, 1, .2775558E-16},  // 40
-	{10, 10, 1,   16, 1, .5009132E-14},  // 41
-	{10, 10, 10,  19, 1, .2188310E-12},  // 42
-	{10, 10, 100, 39, 1, .3034804E-14},  // 43
-	{11, 10, 1,  130, 4, .5296377E-02},  // 44
-	{11, 10, 10,  84, 1, .5917302E-10},  // 45
-	{11, 10, 100, 85, 1, .1856423E-08},  // 46
-	{12, 10, 1,   31, 1, .5119467E-11},  // 47
-	{12, 10, 10,  35, 1, .7399640E-10},  // 48
-	{12, 10, 100, 66, 1, 0           },  // 49
-	{13, 10, 1,   21, 1, .1493879E-07},  // 50
-	{13, 10, 10,  59, 1, .5337442E-08},  // 51
-	{13, 10, 100, 42, 1, .9878880E-10},  // 52
-	{14, 10, 1,   30, 1, .2057898E-08},  // 53
-	{14, 10, 10,  45, 1, .7953613E-08},  // 54
-	{14, 10, 100, 58, 1, .4526424E-09},  // 55
+  /*  nprob    n  factor  nfev  info         fnorm2 */
+	{ 1,   2,      1,   22,     1,  0           },  // 01  
+	{ 1,   2,     10,    9,     1,  0           },  // 02
+	{ 1,   2,    100,    9,     1,  .5373479E-12},  // 03
+	{ 2,   4,      1,  123,     4,  .1736920E-34},  // 04
+	{ 2,   4,     10,  110,     4,  .1828554E-32},  // 05
+	{ 2,   4,    100,  156,     4,  .2539466E-34},  // 06
+	{ 3,   2,      1,  181,     1,  .1712494E-08},  // 07
+	{ 3,   2,     10,   11,     1,  .3744485E-07},  // 08
+	{ 4,   4,      1,   94,     1,  .4005067E-10},  // 09
+	{ 4,   4,     10,  234,     1,  .5154548E-09},  // 10
+	{ 4,   4,    100,  514,     1,  .2491133E-10},  // 11
+	{ 5,   3,      1,   27,     1,  .2753457E-12},  // 12
+	{ 5,   3,     10,   31,     1,  .4427907E-13},  // 13
+	{ 5,   3,    100,   40,     1,  .1610836E-12},  // 14
+	{ 6,   6,      1,   96,     1,  .3191646E-12},  // 15
+	{ 6,   6,     10,  310,     1,  .2336128E-10},  // 16
+	{ 6,   9,      1,  167,     1,  .1817744E-13},  // 17
+	{ 6,   9,     10,  167,     1,  .1138869E-11},  // 18
+	{ 7,   5,      1,   17,     1,  .3540292E-11},  // 19
+	{ 7,   5,     10,  256,     1,  .1902384E-09},  // 20
+	{ 7,   5,    100,  522,     1,  .2269130E-10},  // 21
+	{ 7,   6,      1,   25,     1,  .6841874E-09},  // 22
+	{ 7,   6,     10,  172,     1,  .2281996E-10},  // 23
+	{ 7,   6,    100,  274,     1,  .1260220E-10},  // 24
+	{ 7,   7,      1,   20,     1,  .2398700E-08},  // 25
+	{ 7,   7,     10,  525,     1,  .1624356E-09},  // 26
+	{ 7,   7,    100,  657,     4,  .2416003E+00},  // 27
+	{ 7,   8,      1,  120,     4,  .6440508E-01},  // 28
+	{ 7,   9,      1,   41,     1,  .1889808E-08},  // 29
+	{ 8,  10,      1,   31,     1,  .1312131E-13},  // 30
+	{ 8,  10,     10,   31,     1,  .1601186E-13},  // 31
+	{ 8,  10,    100,   38,     1,  .4213000E-14},  // 32
+	{ 8,  30,      1,  113,     1,  .2073414E-12},  // 33
+	{ 8,  40,      1,  196,     1,  .8885114E-13},  // 34
+	{ 9,  10,      1,   16,     1,  .2497793E-14},  // 35
+	{ 9,  10,     10,   19,     1,  .1725954E-12},  // 36
+	{ 9,  10,    100,   52,     1,  .4174414E-09},  // 37
+	{10,   1,      1,    7,     1,  .5551115E-16},  // 38
+	{10,   1,     10,    9,     1,  .5551115E-16},  // 39
+	{10,   1,    100,   16,     1,  .2775558E-16},  // 40
+	{10,  10,      1,   16,     1,  .5009132E-14},  // 41
+	{10,  10,     10,   19,     1,  .2188310E-12},  // 42
+	{10,  10,    100,   39,     1,  .3034804E-14},  // 43
+	{11,  10,      1,  130,     4,  .5296377E-02},  // 44
+	{11,  10,     10,   84,     1,  .5917302E-10},  // 45
+	{11,  10,    100,   85,     1,  .1856423E-08},  // 46
+	{12,  10,      1,   31,     1,  .5119467E-11},  // 47
+	{12,  10,     10,   35,     1,  .7399640E-10},  // 48
+	{12,  10,    100,   66,     1,  0           },  // 49
+	{13,  10,      1,   21,     1,  .1493879E-07},  // 50
+	{13,  10,     10,   59,     1,  .5337442E-08},  // 51
+	{13,  10,    100,   42,     1,  .9878880E-10},  // 52
+	{14,  10,      1,   30,     1,  .2057898E-08},  // 53
+	{14,  10,     10,   45,     1,  .7953613E-08},  // 54
+	{14,  10,    100,   58,     1,  .4526424E-09},  // 55
 };
 
 /*
@@ -108,18 +110,15 @@ struct test_case tests[55] = {
  *       nprob is a positive int input variable which defines the 
  *         number of the problem. nprob must not exceed 14. 
  */
-void vecfcn(int n, double *x, double *fvec, int nprob)
+void vecfcn(int n, const double *x, double *fvec, int nprob)
 {
-	/* Local variables */
-
-	/* Parameter adjustments */
+        /* Parameter adjustments */
 	--fvec;
 	--x;
-
-	/* Function Body */
-
-/*     PROBLEM SELECTOR. */
-
+	double c,d, twopi, tmp1, tmp2, sum, prod, h;
+	int ml, mu;
+	
+	/*PROBLEM SELECTOR. */
 	switch (nprob) {
 	case 1:
 		/* Rosenbrock function. */
@@ -145,8 +144,8 @@ void vecfcn(int n, double *x, double *fvec, int nprob)
 
 	case 4:
 		/* WOOD FUNCTION. */
-		double c = x[2] - x[1] * x[1];
-		double d = x[4] - x[3] * x[3];
+		c = x[2] - x[1] * x[1];
+		d = x[4] - x[3] * x[3];
 		fvec[1] = -200 * x[1] * c - (1 - x[1]);
 		fvec[2] = 200 * c + 20.2 * (x[2] - 1) + 19.8 * (x[4] - 1);
 		fvec[3] = -180 * x[3] * d - (1 - x[3]);
@@ -155,13 +154,13 @@ void vecfcn(int n, double *x, double *fvec, int nprob)
 
 	case 5:
 		/* HELICAL VALLEY FUNCTION. */
-		double twopi = 2 * M_PI;
-		double tmp1 = x[2] < 0 ? -0.25 : 0.25;
+		twopi = 2 * M_PI;
+		tmp1 = x[2] < 0 ? -0.25 : 0.25;
 		if (x[1] > 0)
 			tmp1 = atan(x[2] / x[1]) / twopi;
 		if (x[1] < 0)
 			tmp1 = atan(x[2] / x[1]) / twopi + .5;
-		double tmp2 = sqrt(x[1] * x[1] + x[2] * x[2]);
+		tmp2 = sqrt(x[1] * x[1] + x[2] * x[2]);
 		fvec[1] = 10 * (x[3] - 10 * tmp1);
 		fvec[2] = 10 * (tmp2 - 1);
 		fvec[3] = x[3];
@@ -225,8 +224,8 @@ void vecfcn(int n, double *x, double *fvec, int nprob)
 
 	case 8:
 		/* brown almost-linear function. */
-		double sum = -(n + 1);
-		double prod = 1;
+		sum = -(n + 1);
+		prod = 1;
 		for (int j = 1; j <= n; ++j) {
 			sum += x[j];
 			prod *= x[j];
@@ -238,7 +237,7 @@ void vecfcn(int n, double *x, double *fvec, int nprob)
 
 	case 9:
 		/* DISCRETE BOUNDARY VALUE FUNCTION. */
-		double h = 1. / (n + 1);
+		h = 1. / (n + 1);
 		for (int k = 1; k <= n; ++k) {
 			double a = x[k] + k * h + 1;
 			double temp = a * (a * a);
@@ -313,8 +312,8 @@ void vecfcn(int n, double *x, double *fvec, int nprob)
 
 	case 14:
 		/*     BROYDEN BANDED FUNCTION. */
-		int ml = 5;
-		int mu = 1;
+		ml = 5;
+		mu = 1;
 		for (int k = 1; k <= n; ++k) {
 			double k1 = fmax(1, k - ml);
 			double k2 = fmin(k + mu, n);
@@ -358,8 +357,9 @@ void vecfcn(int n, double *x, double *fvec, int nprob)
 void initpt(int n, double *x, int nprob, double factor)
 {
 	--x;
-
-	/*     SELECTION OF INITIAL POINT. */
+	double h;
+	
+	/* SELECTION OF INITIAL POINT. */
 	switch (nprob) {
 	case 1:
 		/* ROSENBROCK FUNCTION. */
@@ -398,7 +398,7 @@ void initpt(int n, double *x, int nprob, double factor)
 		break;
 	case 7:
 		/* CHEBYQUAD FUNCTION. */
-		double h = 1. / (n + 1);
+		h = 1. / (n + 1);
 		for (int j = 1; j <= n; ++j)
 			x[j] = j * h;
 		break;
@@ -472,12 +472,14 @@ void initpt(int n, double *x, int nprob, double factor)
  *       nprob is a positive int variable which defines the
  *         number of the problem.  nprob must not exceed 14.
  */
-void vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
+void vecjac(int n, const double *x, double *fjac, int ldfjac, int nprob)
 {
 	/* Parameter adjustments */
 	--x;
 	fjac -= 1 + ldfjac;
-
+	double dx, prod, b, c, d, h9, sum, h10;
+	int ml, mu;
+	
 	/* JACOBIAN ROUTINE SELECTOR */
 	switch (nprob) {
 	case 1:
@@ -533,9 +535,9 @@ void vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 
 	case 5:
 		/* HELICAL VALLEY FUNCTION. */
-		double b = x[1] * x[1] + x[2] * x[2];
-		double c = 2 * M_PI * b;
-		double d = sqrt(b);
+		b = x[1] * x[1] + x[2] * x[2];
+		c = 2 * M_PI * b;
+		d = sqrt(b);
 		fjac[ldfjac + 1] = 100 * x[2] / c;
 		fjac[ldfjac * 2 + 1] = -100 * x[1] / c;
 		fjac[ldfjac * 3 + 1] = 10;
@@ -592,7 +594,7 @@ void vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 		break;
 	case 7:
 		/* CHEBYQUAD FUNCTION. */
-		double dx = 1. / n;
+		dx = 1. / n;
 		for (int j = 1; j <= n; ++j) {
 			double tmp1 = 1;
 			double tmp2 = 2 * x[j] - 1;
@@ -613,7 +615,7 @@ void vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 
 	case 8:
 		/* BROWN ALMOST-LINEAR FUNCTION. */
-		double prod = 1;
+		prod = 1;
 		for (int j = 1; j <= n; ++j) {
 			prod = x[j] * prod;
 			for (int i = 1; i <= n; ++i)
@@ -634,8 +636,8 @@ void vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 		break;
 
 	case 9:
-		/*  DISCRETE BOUNDARY VALUE FUNCTION. */
-		double h9 = 1. / (n + 1);
+		/* DISCRETE BOUNDARY VALUE FUNCTION. */
+		h9 = 1. / (n + 1);
 		for (int k = 1; k <= n; ++k) {
 			/* Computing 2nd power */
 			double d = x[k] + k * h9 + 1;
@@ -651,8 +653,8 @@ void vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 		break;
 
 	case 10:
-		/*     DISCRETE INTEGRAL EQUATION FUNCTION. */
-		double h10 = 1. / (n + 1);
+		/* DISCRETE INTEGRAL EQUATION FUNCTION. */
+		h10 = 1. / (n + 1);
 		for (int k = 1; k <= n; ++k) {
 			int tk = k * h10;
 			for (int j = 1; j <= n; ++j) {
@@ -668,7 +670,7 @@ void vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 		break;
 
 	case 11:
-		/*     TRIGONOMETRIC FUNCTION. */
+		/*TRIGONOMETRIC FUNCTION. */
 		for (int j = 1; j <= n; ++j) {
 			double temp = sin(x[j]);
 			for (int k = 1; k <= n; ++k)
@@ -678,8 +680,8 @@ void vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 		break;
 
 	case 12:
-		/*     VARIABLY DIMENSIONED FUNCTION. */
-		double sum = 0;
+		/* VARIABLY DIMENSIONED FUNCTION. */
+		sum = 0;
 		for (int j = 1; j <= n; ++j)
 			sum += j * (x[j] - 1);
 
@@ -707,9 +709,9 @@ void vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 		break;
 
 	case 14:
-		/*     BROYDEN BANDED FUNCTION. */
-		int ml = 5;
-		int mu = 1;
+		/* BROYDEN BANDED FUNCTION. */
+		ml = 5;
+		mu = 1;
 		for (int k = 1; k <= n; ++k) {
 			for (int j = 1; j <= n; ++j)
 				fjac[k + j * ldfjac] = 0;
@@ -761,12 +763,14 @@ void vecjac(int n, double *x, double *fjac, int ldfjac, int nprob)
   *     argonne national laboratory. minpack project. march 1980. 
   *     burton s. garbow, kenneth e. hillstrom, jorge j. more 
   */
-void errjac(int n, double *x, double *fjac, int ldfjac, int nprob)
+void errjac(int n, const double *x, double *fjac, int ldfjac, int nprob)
 {
 	/* Parameter adjustments */
 	--x;
 	fjac -= 1 + ldfjac;
-
+	double b, c, d, dx, prod, h9, h10, sum;
+	int mu, ml;
+	
 	/* JACOBIAN ROUTINE SELECTOR */
 	switch (nprob) {
 	case 1:
@@ -823,9 +827,9 @@ void errjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 	case 5:
 		/* HELICAL VALLEY FUNCTION WITH MULTIPLICATIVE ERROR 
 		   AFFECTING ELEMENTS (2,1) AND (2,2). */
-		double b = x[1] * x[1] + x[2] * x[2];
-		double c = 2 * M_PI * b;
-		double d = sqrt(b);
+		b = x[1] * x[1] + x[2] * x[2];
+		c = 2 * M_PI * b;
+		d = sqrt(b);
 		fjac[ldfjac + 1] = 100 * x[2] / c;
 		fjac[ldfjac * 2 + 1] = -100 * x[1] / c;
 		fjac[ldfjac * 3 + 1] = 10;
@@ -882,8 +886,8 @@ void errjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 				fjac[j + k * ldfjac] = fjac[k + j * ldfjac];
 		break;
 	case 7:
-		/*     CHEBYQUAD FUNCTION WITH JACOBIAN TWICE CORRECT SIZE. */
-		double dx = 1. / n;
+		/* CHEBYQUAD FUNCTION WITH JACOBIAN TWICE CORRECT SIZE. */
+		dx = 1. / n;
 		for (int j = 1; j <= n; ++j) {
 			double tmp1 = 1;
 			double tmp2 = 2 * x[j] - 1;
@@ -903,8 +907,8 @@ void errjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 		break;
 
 	case 8:
-		/*     BROWN ALMOST-LINEAR FUNCTION WITHOUT ERROR. */
-		double prod = 1;
+		/* BROWN ALMOST-LINEAR FUNCTION WITHOUT ERROR. */
+		prod = 1;
 		for (int j = 1; j <= n; ++j) {
 			prod = x[j] * prod;
 			for (int i = 1; i <= n; ++i)
@@ -927,7 +931,7 @@ void errjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 	case 9:
 		/* DISCRETE BOUNDARY VALUE FUNCTION WITH MULTIPLICATIVE ERROR */
 		/* AFFECTING THE JACOBIAN DIAGONAL. */
-		double h9 = 1. / (n + 1);
+		h9 = 1. / (n + 1);
 		for (int k = 1; k <= n; ++k) {
 			/* Computing 2nd power */
 			double d = x[k] + k * h9 + 1;
@@ -945,7 +949,7 @@ void errjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 	case 10:
 		/* DISCRETE INTEGRAL EQUATION FUNCTION WITH SIGN ERROR AFFECTING */
 		/* THE JACOBIAN DIAGONAL. */
-		double h10 = 1. / (n + 1);
+		h10 = 1. / (n + 1);
 		for (int k = 1; k <= n; ++k) {
 			int tk = k * h10;
 			for (int j = 1; j <= n; ++j) {
@@ -974,7 +978,7 @@ void errjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 	case 12:
 		/* VARIABLY DIMENSIONED FUNCTION WITH OPERATION ERROR AFFECTING */
 		/* THE UPPER TRIANGULAR ELEMENTS OF THE JACOBIAN. */
-		double sum = 0;
+		sum = 0;
 		for (int j = 1; j <= n; ++j)
 			sum += j * (x[j] - 1);
 
@@ -1004,8 +1008,8 @@ void errjac(int n, double *x, double *fjac, int ldfjac, int nprob)
 	case 14:
 		/* BROYDEN BANDED FUNCTION WITH SIGN ERROR AFFECTING 
 		   THE JACOBIAN DIAGONAL. */
-		int ml = 5;
-		int mu = 1;
+		ml = 5;
+		mu = 1;
 		for (int k = 1; k <= n; ++k) {
 			for (int j = 1; j <= n; ++j)
 				fjac[k + j * ldfjac] = 0;

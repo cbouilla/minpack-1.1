@@ -149,21 +149,6 @@ void r1updt_(const int *m, const int *n, double *s, const int *ls,
 
 void r1mpyq_(const int *m, const int *n, double *a, const int *lda, double *v, double *w);
 
-void lmbase(minpack_func_mnj fcn_der, minpack_func_mn fcn_dif, const int *m, const int *n, double *x, 
-	double *fvec, double *fjac, const int *ldfjac, const double *ftol,
-	const double *xtol, const double *gtol, const int *maxfev, const double * epsfcn, 
-    double *diag, const int *mode, const double *factor, const int *nprint, 
-    int *info, int *nfev, int *njev, int *ipvt, double *qtf, 
-	double *wa1, double *wa2, double *wa3, double *wa4);
-
-void hybrbase(minpack_func_n fcn_dif, minpack_func_nj fcn_der,
-	      const int *n, double *x, double *fvec, double *fjac, const int *ldfjac, 
-	      const double *xtol, const int *maxfev,
-	      const int *ml, const int *mu, const double *epsfcn, double *diag, const int *mode,
-	      const double *factor, const int *nprint, int *info, int *nfev, int *njev,
-	      double *r, const int *lr, double *qtf,
-	      double *wa1, double *wa2, double *wa3, double *wa4);
-
 
 /**************************** BLAS ************************/
 

@@ -1,6 +1,6 @@
 #include <stddef.h>
 
-#include "minpack.h"
+#include "cminpack.h"
 
 /*
  *     subroutine hybrd 
@@ -148,13 +148,13 @@
  *     argonne national laboratory. minpack project. march 1980. 
  *     burton s. garbow, kenneth e. hillstrom, jorge j. more 
  */
-void hybrd_(minpack_func_n fcn, 
-		  const int *n, double *x, double *fvec, const double *xtol, const int *maxfev,
-		  const int *ml, const int *mu, const double *epsfcn, double *diag, const int *mode,
-		  const double *factor, const int *nprint, int *info, int *nfev,
-		  double *fjac, const int *ldfjac, double *r, const int *lr, double *qtf,
+int hybrd(cminpack_func_n fcn, void *farg,
+		  int n, double *x, double *fvec, double xtol, int maxfev,
+		  double epsfcn, double *diag, int mode,
+		  double factor, int nprint, int *nfev,
+		  double *fjac, int ldfjac, double *r, int lr, double *qtf,
 		  double *wa1, double *wa2, double *wa3, double *wa4)
 {
-	hybrbase(fcn, NULL, n, x, fvec, fjac, ldfjac, xtol, maxfev, ml, mu, epsfcn, diag, mode,
-	      factor, nprint, info, nfev, NULL, r, lr, qtf, wa1, wa2, wa3, wa4);
+	return hybrbase(fcn, NULL, farg, n, x, fvec, fjac, ldfjac, xtol, maxfev, epsfcn, diag, mode,
+	      factor, nprint, nfev, NULL, r, lr, qtf, wa1, wa2, wa3, wa4);
 }

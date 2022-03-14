@@ -28,7 +28,7 @@ int njev;
 int nprob;
 
 /* This function is called by the solver and obeys the Fortran calling convention */
-void fcn(int *m, int *n, double *x, double *fvec, int *iflag)
+void fcn(const int *m, const int *n, const double *x, double *fvec, int *iflag)
 {
 	(void) m;
 	vecfcn(*n, x, fvec, nprob);
@@ -82,6 +82,6 @@ int main()
 	double start = wtime();
 	do_test(13, 3000, 1);
 	do_test(11, 3200, 1);
-	do_test(12, 1000, 1);
+	// do_test(12, 1000, 1);
 	printf("# total time: %.1fs\n", wtime() - start);
 }
