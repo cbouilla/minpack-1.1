@@ -1,4 +1,4 @@
-#include "minpack.h"
+#include "cminpack.h"
 
 /*
  *     Subroutine hybrd1
@@ -76,42 +76,40 @@
  *     argonne national laboratory. minpack project. march 1980. 
  *     burton s. garbow, kenneth e. hillstrom, jorge j. more 
  */
-void hybrd1_(minpack_func_n fcn, const int *n, double *x, double *fvec, 
-    const double *tol, int *info, double *wa, const int *lwa)
+int hybrd1(cminpack_func_n fcn, void *farg, int n, double *x, double *fvec, 
+    double tol, double *wa, int lwa)
 {
-    *info = 0;
+    int info = 0;
 
     /* check the input parameters for errors. */
-    if (*n <= 0 || *tol < 0 || *lwa < *n * (*n * 3 + 13) / 2)
-	   return;
+    if (n <= 0 || tol < 0 || lwa < n * (n * 3 + 13) / 2)
+	   return info;
 
     /* call hybrd. */
     double factor = 100;
     int nfev = 0;
-    int maxfev = (*n + 1) * 200;
-    double xtol = *tol;
-    int ml = *n - 1;
-    int mu = *n - 1;
+    int maxfev = (n + 1) * 200;
+    double xtol = tol;
     double epsfcn = 0;
     int mode = 2;
     int nprint = 0;
-    int lr = *n * (*n + 1) / 2;
+    int lr = n * (n + 1) / 2;
     double * diag = wa;
-    for (int j = 0; j < *n; ++j)
+    for (int j = 0; j < n; ++j)
         diag[j] = 1;
-    int index = *n * 6 + lr;
+    int index = n * 6 + lr;
     double * fjac = &wa[index];
-    double *qtf = &wa[*n];
-    double * wa1 = &wa[*n * 2];
-    double * wa2 = &wa[*n * 3];
-    double * wa3 = &wa[*n * 4];
-    double * wa4 = &wa[*n * 5];
-    double * r = &wa[*n * 6];
+    double *qtf = &wa[n];
+    double * wa1 = &wa[n * 2];
+    double * wa2 = &wa[n * 3];
+    double * wa3 = &wa[n * 4];
+    double * wa4 = &wa[n * 5];
+    double * r = &wa[n * 6];
 
-    hybrd_(fcn, n, x, fvec, &xtol, &maxfev, &ml, &mu, &epsfcn, diag, 
-        &mode, &factor, &nprint, info, &nfev, fjac, n, r, &lr, 
-        qtf, wa1, wa2, wa3, wa4);
+    info = hybrd(fcn, farg, n, x, fvec, xtol, maxfev, epsfcn, diag, 
+        mode, factor, nprint, &nfev, fjac, n, r, lr, qtf, wa1, wa2, wa3, wa4);
     
-    if (*info == 5)
-	   *info = 4;
+    if (info == 5)
+	   info = 4;
+    return info;
 }

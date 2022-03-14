@@ -1,4 +1,4 @@
-#include "minpack.h"
+#include "cminpack.h"
 
 /*
  *     Subroutine hybrj1 
@@ -84,37 +84,38 @@
  *     Argonne National Laboratory. MINPACK project.  March 1980. 
  *     Burton S. Garbow, Kenneth E. Hillstrom, Jorge J. Moré 
  */
-void hybrj1_(minpack_func_nj fcn, const int *n, double *x, double *fvec, double *fjac,
-	     const int *ldfjac, const double *tol, int *info, double *wa, const int *lwa)
+int hybrj1(cminpack_func_nj fcn, void *farg, int n, double *x, double *fvec, double *fjac,
+	     int ldfjac, double tol, double *wa, int lwa)
 {
-	*info = 0;
+	int info = 0;
 
 	/* check the input parameters for errors. */
-	if (*n <= 0 || *ldfjac < *n || *tol < 0 || *lwa < *n * (*n + 13) / 2)
-		return;
+	if (n <= 0 || ldfjac < n || tol < 0 || lwa < n * (n + 13) / 2)
+		return info;
 
 	/* Call hybrj */
 	double factor = 100;
-	int maxfev = (*n + 1) * 100;
-	double xtol = *tol;
+	int maxfev = (n + 1) * 100;
+	double xtol = tol;
 	int mode = 2;
 	int nprint = 0;
-	int lr = *n * (*n + 1) / 2;
+	int lr = n * (n + 1) / 2;
 	int nfev = 0;
 	int njev = 0;
     double * diag = wa;
-    for (int j = 0; j < *n; ++j)
+    for (int j = 0; j < n; ++j)
         diag[j] = 1;
-    double *qtf = &wa[*n];
-    double * wa1 = &wa[*n * 2];
-    double * wa2 = &wa[*n * 3];
-    double * wa3 = &wa[*n * 4];
-    double * wa4 = &wa[*n * 5];
-    double * r = &wa[*n * 6];
+    double *qtf = &wa[n];
+    double * wa1 = &wa[n * 2];
+    double * wa2 = &wa[n * 3];
+    double * wa3 = &wa[n * 4];
+    double * wa4 = &wa[n * 5];
+    double * r = &wa[n * 6];
 	
-    hybrj_(fcn, n, x, fvec, fjac, ldfjac, &xtol, &maxfev, wa, &mode, &factor, &nprint, info,
-	       &nfev, &njev, r, &lr, qtf, wa1, wa2, wa3, wa4);
+    info = hybrj(fcn, farg, n, x, fvec, fjac, ldfjac, xtol, maxfev, wa, mode, factor, nprint,
+	       &nfev, &njev, r, lr, qtf, wa1, wa2, wa3, wa4);
 	
-    if (*info == 5)
-		*info = 4;
+    if (info == 5)
+		info = 4;
+    return info;
 }

@@ -1,4 +1,4 @@
-#include "minpack.h"
+#include "cminpack.h"
 
 /*     Subroutine lmdif1
  *
@@ -91,30 +91,30 @@
  *     burton s. garbow, kenneth e. hillstrom, jorge j. more
  */
 
-void lmdif1_(minpack_func_mn fcn, int const *m, int const *n, double *x, 
-	double *fvec, double const *tol, int *info, int *iwa, 
-	double *wa, int const *lwa)
+int lmdif1(cminpack_func_mn fcn, void *farg, int m, int n, double *x, 
+	double *fvec, double tol, int *iwa, double *wa, int lwa)
 {
-	*info = 0;
+	int info = 0;
 
 	/* check the input parameters for errors. */
-	if (*n <= 0 || *m < *n || *tol < 0 || *lwa < *m * *n + *n * 5 + *m)
-		return;
+	if (n <= 0 || m < n || tol < 0 || lwa < m * n + n * 5 + m)
+		return info;
 
 	/* call lmdif. */
     double factor = 100.;
-	int maxfev = (*n + 1) * 200;
-	double ftol = *tol;
-	double xtol = *tol;
+	int maxfev = (n + 1) * 200;
+	double ftol = tol;
+	double xtol = tol;
 	double gtol = 0;
 	double epsfcn = 0;
 	int mode = 1;
 	int nprint = 0;
-	int mp5n = *m + *n * 5;
+	int mp5n = m + n * 5;
     int nfev = 0;
-	lmdif_(fcn, m, n, x, fvec, &ftol, &xtol, &gtol, &maxfev, &epsfcn, 
-        wa, &mode, &factor, &nprint, info, &nfev, &wa[mp5n], m, iwa, 
-        &wa[*n], &wa[*n * 2], &wa[*n * 3], &wa[*n * 4], &wa[*n * 5]);
-	if (*info == 8)
-		*info = 4;
+	info = lmdif(fcn, farg, m, n, x, fvec, ftol, xtol, gtol, maxfev, epsfcn, 
+        wa, mode, factor, nprint, &nfev, &wa[mp5n], m, iwa, 
+        &wa[n], &wa[n * 2], &wa[n * 3], &wa[n * 4], &wa[n * 5]);
+	if (info == 8)
+		info = 4;
+    return info;
 }

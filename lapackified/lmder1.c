@@ -1,4 +1,4 @@
-#include "minpack.h"
+#include "cminpack.h"
 
 /*
  *     subroutine lmder1 
@@ -113,29 +113,30 @@
  *     Argonne National Laboratory.  MINPACK project.  March 1980. 
  *     Burton S. Garbow, Kenneth e. Hillstrom, Jorge J. Moré 
  */
-void lmder1_(minpack_func_mnj fcn, const int *m, const int *n, double *x, 
-	double *fvec, double *fjac, const int *ldfjac, const double *tol, 
-	int *info, int *ipvt, double *wa, const int *lwa)
+int lmder1(cminpack_func_mnj fcn, void *farg, int m, int n, double *x, 
+	double *fvec, double *fjac, int ldfjac, double tol, 
+	int *ipvt, double *wa, int lwa)
 {
-	*info = 0;
+	int info = 0;
 
 	/* check the input parameters for errors. */
-	if (*n <= 0 || *m < *n || *ldfjac < *m || *tol < 0 || *lwa < *n * 5 + *m)
-	return;
+	if (n <= 0 || m < n || ldfjac < m || tol < 0 || lwa < n * 5 + m)
+	   return info;
 
 	/* Call lmder. */
-	int maxfev = (*n + 1) * 100;
-	double ftol = *tol;
-	double xtol = *tol;
+	int maxfev = (n + 1) * 100;
+	double ftol = tol;
+	double xtol = tol;
 	double gtol = 0;
 	int mode = 1;
 	int nprint = 0;
 	int nfev = 0;
 	int njev = 0;
 	double factor = 100.;
-	lmder_(fcn, m, n, x, fvec, fjac, ldfjac, &ftol, &xtol, &gtol, &maxfev, 
-		wa, &mode, &factor, &nprint, info, &nfev, &njev, ipvt, &wa[*n], &wa[*n * 2], 
-		&wa[*n * 3], &wa[*n * 4], &wa[*n * 5]);
-	if (*info == 8)
-	*info = 4;
+	lmder(fcn, farg, m, n, x, fvec, fjac, ldfjac, ftol, xtol, gtol, maxfev, 
+		wa, mode, factor, nprint, &nfev, &njev, ipvt, &wa[n], &wa[n * 2], 
+		&wa[n * 3], &wa[n * 4], &wa[n * 5]);
+	if (info == 8)
+	   info = 4;
+    return info;
 }
