@@ -113,20 +113,3 @@ int lmbase(cminpack_func_mnj fcn_der, cminpack_func_mn fcn_dif, void *farg,
 	    int mode, double factor, int nprint, int *nfev, int *njev, int *ipvt, 
 	    double *qtf, double *wa1, double *wa2, double *wa3, double *wa4);
 
-/**************************** LAPACK ************************/
-
-extern int dgeqp3_(const int *m, const int *n, double *a, const int *lda, 
-	int *jpvt, double *tau, double *work, const int *lwork, int *info);
-
-extern int dgeqrf_(const int *m, const int *n, double *a, const int *lda, 
-	double *tau, double *work, const int *lwork, int *info);
-
-extern int dormqr_(const char *side, const char *trans, 
-	const int *m, const int *n, const int *k, 
-	const double *a, const int *lda, const double *tau,
-    double *c, const int *ldc, double *work, const int *lwork, int *info);
-
-extern int dorgqr_(const int *m, const int *n, const int *k, 
-	const double *a, const int *lda, const double *tau,
-    double *work, const int *lwork, int *info);
-

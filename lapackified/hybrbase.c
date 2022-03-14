@@ -1,32 +1,32 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <lapacke.h>
 
 #include "cminpack.h"
 
 static int query_worksize(int n, int ldfjac)
 {
-        int c1 = 1;
         int lwork = -1;
         double work[1];
         int info;
 
         /* query LAPACK */
-        dgeqrf_(&n, &n, NULL, &ldfjac, NULL, work, &lwork, &info);
+        info = LAPACKE_dgeqrf_work(LAPACK_COL_MAJOR, n, n, NULL, ldfjac, NULL, work, lwork);
         if (info != 0)
                 return -1;
         int needed_dgeqrf = work[0];
         if (needed_dgeqrf < n)
                 return -1;
 
-        dormqr_("Left", "Transpose", &n, &c1, &n, NULL, &ldfjac, NULL, NULL, &n, work, &lwork, &info);
+        info = LAPACKE_dormqr_work(LAPACK_COL_MAJOR, 'L', 'T', n, 1, n, NULL, ldfjac, NULL, NULL, n, work, lwork);
         if (info != 0)
                 return -1;
         int needed_dormqr = work[0];
         if (needed_dormqr < n)
                 return -1;
         
-	dorgqr_(&n, &n, &n, NULL, &ldfjac, NULL, work, &lwork, &info);
+	info = LAPACKE_dorgqr_work(LAPACK_COL_MAJOR, n, n, n, NULL, ldfjac, NULL, work, lwork);
 	if (info != 0)
                 return -1;
         int needed_dorgqr = work[0];
@@ -52,7 +52,6 @@ int hybrbase(cminpack_func_n fcn_dif, cminpack_func_nj fcn_der, void *farg,
 	/* epsmch is the machine precision. */
 	double epsmch = MINPACK_EPSILON;
 	ptrdiff_t fjac_dim1 = ldfjac;
-	int c1 = 1;
 	int msum = n;
 	int iflag = 0;
 	int info = 0;
@@ -136,15 +135,14 @@ int hybrbase(cminpack_func_n fcn_dif, cminpack_func_nj fcn_der, void *farg,
 
 		/* compute the QR factorization of the jacobian. */
 		double *tau = wa1;
-		int lapack_info;
-		dgeqrf_(&n, &n, fjac, &ldfjac, tau, work, &lwork, &lapack_info);	// LAPACK
+		int lapack_info = LAPACKE_dgeqrf_work(LAPACK_COL_MAJOR, n, n, fjac, ldfjac, tau, work, lwork);
 		if (lapack_info != 0)
 			goto fini;
 
 		/* qtf <-- (Q transpose)*fvec */
 		for (int i = 0; i < n; ++i)
 			wa4[i] = fvec[i];
-		dormqr_("Left", "Transpose", &n, &c1, &n, fjac, &ldfjac, tau, wa4, &n, work, &lwork, &lapack_info);
+		LAPACKE_dormqr_work(LAPACK_COL_MAJOR, 'L', 'T', n, 1, n, fjac, ldfjac, tau, wa4, n, work, lwork);
 		if (lapack_info != 0)
 			goto fini;
 		for (int j = 0; j < n; ++j)
@@ -161,7 +159,7 @@ int hybrbase(cminpack_func_n fcn_dif, cminpack_func_nj fcn_der, void *farg,
 		}
 
 		/* accumulate the orthogonal factor in fjac. */
-		dorgqr_(&n, &n, &n, fjac, &ldfjac, tau, work, &lwork, &lapack_info);
+		LAPACKE_dorgqr_work(LAPACK_COL_MAJOR, n, n, n, fjac, ldfjac, tau, work, lwork);
 		if (lapack_info != 0)
 			goto fini;
 

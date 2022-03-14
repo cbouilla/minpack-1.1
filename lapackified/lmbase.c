@@ -2,25 +2,26 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <cblas.h>
+#include <lapacke.h>
 
 #include "cminpack.h"
 
 
 static int query_worksize(int m, int n, int ldfjac)
 {
-        int c1 = 1;
         int lwork = -1;
         double work[1];
         int info;
 
         /* query LAPACK */
-        dgeqp3_(&m, &n, NULL, &ldfjac, NULL, NULL, work, &lwork, &info);
+        info = LAPACKE_dgeqp3_work(LAPACK_COL_MAJOR, m, n, NULL, ldfjac, NULL, NULL, work, lwork);
         if (info != 0)
                 return -1;
         int needed_dgeqp3 = work[0];
         if (needed_dgeqp3 < 3 * n + 1)
                 return -1;
-        dormqr_("Left", "Transpose", &m, &c1, &n, NULL, &ldfjac, NULL, NULL, &m, work, &lwork, &info);
+
+        info = LAPACKE_dormqr_work(LAPACK_COL_MAJOR, 'L', 'T', m, 1, n, NULL, ldfjac, NULL, NULL, m, work, lwork);
         if (info != 0)
                 return -1;
         int needed_dormqr = work[0];
@@ -42,7 +43,6 @@ int lmbase(cminpack_func_mnj fcn_der, cminpack_func_mn fcn_dif, void *farg,
 {
 	/* Parameter adjustments */
 	ptrdiff_t fjac_dim1 = ldfjac;
-	int c1 = 1;
 
 	/* epsmch is the machine precision. */
 	double epsmch = MINPACK_EPSILON;
@@ -143,16 +143,16 @@ int lmbase(cminpack_func_mnj fcn_der, cminpack_func_mn fcn_dif, void *farg,
 			ipvt[j] = 0;
 
 		/* compute the QR factorization of the jacobian. */
-                int lapack_info;
                 double *tau = wa1;
-		dgeqp3_(&m, &n, fjac, &ldfjac, ipvt, tau, work, &lwork, &lapack_info);
+                int lapack_info = LAPACKE_dgeqp3_work(LAPACK_COL_MAJOR, m, n, fjac, ldfjac, ipvt, tau, work, lwork);
+		// dgeqp3_(&m, &n, fjac, &ldfjac, ipvt, tau, work, &lwork, &lapack_info);
 		if (lapack_info != 0)
                         goto fini;
 
 		/* qtf <-- (Q transpose)*fvec */
 		for (int i = 0; i < m; ++i)
 			wa4[i] = fvec[i];
-		dormqr_("Left", "Transpose", &m, &c1, &n, fjac, &ldfjac, tau, wa4, &m, work, &lwork, &lapack_info);
+		lapack_info = LAPACKE_dormqr_work(LAPACK_COL_MAJOR, 'L', 'T', m, 1, n, fjac, ldfjac, tau, wa4, m, work, lwork);
                 if (lapack_info != 0)
                         goto fini;
 		for (int j = 0; j < n; ++j)
