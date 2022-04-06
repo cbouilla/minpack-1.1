@@ -78,7 +78,7 @@ int plmdif1(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *f
 	if (n <= 0 || m < n || tol < 0)
 		return info;
 
-	/* call ^plmdif */
+	/* call plmdif */
 	int maxfev = (n + 1) * 200;
 	double ftol = tol;
 	double xtol = tol;

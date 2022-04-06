@@ -54,6 +54,7 @@ static int qrfac(int n, int m, double *fvec, double *fjac, int ldfjac, int *ipvt
 	for (int j = 0; j < n; ++j)
 		qtf[j] = wa4[j];
 
+	/* copy R */
 	for (int j = 0; j < n; j++)
 		for (int i = 0; i <= j; i++)
 			R[j * n + i] = fjac[j * ldfjac + i];
@@ -122,6 +123,8 @@ static int qrfac(int n, int m, double *fvec, double *fjac, int ldfjac, int *ipvt
  *         terminated execution, info is set to the (negative)
  *         value of iflag. see description of fcn. otherwise,
  *         info is set as follows.
+ *
+ *         info < 0  runtime error (scalapack or lapack).
  *
  *         info = 0  improper input parameters.
  *
@@ -255,18 +258,19 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 
 		/* rescale if necessary. */
 		for (int j = 0; j < n; ++j)
-			diag[j] = fmax(diag[j], wa2[j]);
+			diag[j] = fmax(diag[j], acnorm[j]);
 
 		/* inner loop. */
 		for (;;) {
 			/* determine the levenberg-marquardt parameter. */
-			par = lmpar(n, R, n, ipvt, diag, qtf, delta, wa1, wa2, wa3, wa4);
+			double *p = wa1;
+			par = lmpar(n, R, n, ipvt, diag, qtf, delta, p, wa2, wa3, wa4);
 
 			/* store the direction p and x + p. calculate the norm of p. */
 			for (int j = 0; j < n; ++j) {
-				wa1[j] = -wa1[j];
-				wa2[j] = x[j] + wa1[j];
-				wa3[j] = diag[j] * wa1[j];
+				p[j] = -p[j];
+				wa2[j] = x[j] + p[j];
+				wa3[j] = diag[j] * p[j];
 			}
 			double pnorm = enorm(n, wa3);
 
@@ -291,7 +295,7 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 			   the scaled directional derivative. */
 			for (int j = 0; j < n; ++j) {
 				int l = ipvt[j] - 1;
-				wa3[j] = wa1[l];
+				wa3[j] = p[l];
 			}
 			cblas_dtrmv(CblasColMajor, CblasUpper, CblasNoTrans, CblasNonUnit, n, R, n, wa3, 1);
 			double temp1 = enorm(n, wa3) / fnorm;

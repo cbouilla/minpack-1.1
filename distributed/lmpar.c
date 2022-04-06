@@ -87,12 +87,6 @@
  *
  *       wa1 and wa2 are work arrays of length n. 
  *
- *     subprograms called 
- *
- *       minpack-supplied ... dpmpar,enorm,qrsolv 
- *
- *       fortran-supplied ... dabs,dmax1,dmin1,dsqrt 
- *
  *     argonne national laboratory. minpack project. march 1980. 
  *     burton s. garbow, kenneth e. hillstrom, jorge j. more 
  */
