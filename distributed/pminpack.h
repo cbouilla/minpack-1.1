@@ -28,3 +28,12 @@ double lmpar(int n, double *r, int ldr, int *ipvt, double *diag,
 
 void qrsolv(int n, double *r, int ldr, int *ipvt, double *diag, double *qtb, double *x, double *sdiag, double *wa);
 
+double wtime();
+void human_format(char * target, long n);
+int scalapack_numroc(int n, int nb, int rank, int srcrank, int nprocs);
+
+/* scalapack functions */
+
+extern int numroc_(const int *n, const int *nb, const int *rank, const int *srcrank, const int *nprocs);
+extern void Cblacs_pinfo(int * rank, int * nprocs);
+extern void Cblacs_gridinfo(int ictx, int * nprow, int * npcol, int * myrow, int * mycol);

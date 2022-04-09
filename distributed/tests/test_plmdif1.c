@@ -113,13 +113,13 @@ int main()
 	int ictx;
 	int zero = 0;
 	int one = 1;
-	blacs_get_(&zero, &zero, &ictx);   // get BLACS context
+	Cblacs_get(0, 0, &ictx);   // get BLACS context
 
 	int rank, nprocs;	
 	int prow, pcol;
 	
-	blacs_pinfo_(&rank, &nprocs);
-	blacs_gridinit_(&ictx, "Row-Major", &nprow, &npcol);
+	Cblacs_pinfo(&rank, &nprocs);
+	Cblacs_gridinit(&ictx, "Row-Major", nprow, npcol);
 
 
 	/* TAP protocol */
@@ -138,7 +138,7 @@ int main()
 	}
 
 	/* BLACS and MPI cleanup */
-	blacs_exit_(&one);
+	Cblacs_exit(1);
 	MPI_Finalize();
 	return EXIT_SUCCESS;
 }

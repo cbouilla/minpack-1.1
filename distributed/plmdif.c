@@ -31,9 +31,26 @@ static int query_LAPACK_worksize(int m, int n, int ldfjac)
 	return max;
 }
 
-static int qrfac(int n, int m, double *fvec, double *fjac, int ldfjac, int *ipvt, double *R, double *qtf, 
-                 double *wa1, double *wa4, double *work, int lwork, int ictx)
+
+static int jac_qrfac(pminpack_func_mn fcn, void *farg, int n, int m, double *x, double *fvec, 
+	double *fjac, ptrdiff_t ldfjac, int *ipvt, double *R, double *qtf, 
+                 int *nfev, double *wa1, double *wa4, double *work, int lwork, int ictx)
 {
+	double eps = sqrt(MINPACK_EPSILON);
+
+	for (int j = 0; j < n; ++j) {
+		double temp = x[j];
+		double h = eps * fabs(x[j]);
+		if (h == 0)
+			h = eps;
+		x[j] += h;
+		(*fcn)(farg, m, n, x, wa4);
+		x[j] = temp;              // restore x[j]
+		for (int i = 0; i < m; ++i)
+			fjac[i + j * ldfjac] = (wa4[i] - fvec[i]) / h;
+	}
+	*nfev += n;
+
 	/* set all columns free */
 	for (int j = 0; j < n; j++)
 		ipvt[j] = 0;
@@ -166,7 +183,7 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 	double factor = 100.;
 	int info = 0;
 	*nfev = 0;
-	
+
         /* this will be allocated dynamically by this function */ 
         double *work = NULL;
         double *fjac = NULL;
@@ -179,6 +196,24 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 	/* check the input parameters for errors. */
 	if (n <= 0 || m < n || ftol < 0 || xtol < 0 || gtol < 0 || maxfev <= 0)
 		goto fini;
+
+	/* setup pfjac */	
+	int rank, nprocs;
+	int nprow, npcol, myrow, mycol;
+	int nb = 64;
+	int mb = 64;
+	Cblacs_pinfo(&rank, &nprocs);
+	Cblacs_gridinfo(ictx, &nprow, &npcol, &myrow, &mycol);
+	long pfjac_nrow = scalapack_numroc(m, mb, myrow, 0, nprow);
+	long pfjac_ncol = scalapack_numroc(n, nb, mycol, 0, npcol);
+
+	if (rank == 0) {
+		printf("pLMDIF: %d functions in %d variables on a %d x %d process grid\n", m, n, nprow, npcol);
+		char fjacB[16], pfjacB[16];
+		human_format(fjacB, (long) 8 * n * m);
+		human_format(pfjacB, (long) 8 * pfjac_ncol * pfjac_nrow);
+		printf("pLMDIF: full jacobian is %sB. Each process holds %sB\n", fjacB, pfjacB);
+	}
 
         /* allocate memory */
         ptrdiff_t ldfjac = m;
@@ -203,9 +238,10 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 
 	/* outer loop */
 	for (;;) {
-		forward_difference_jacobian(fcn, farg, m, n, x, fvec, fjac, ldfjac, wa4, ictx);
-		*nfev += n;
-		int lres = qrfac(n, m, fvec, fjac, ldfjac, ipvt, R, qtf, wa1, wa4, work, lwork, ictx);
+		if (rank == 0)
+			printf("pLMDIF: begin outer iteration\n");
+
+		int lres = jac_qrfac(fcn, farg, n, m, x, fvec, fjac, ldfjac, ipvt, R, qtf, nfev, wa1, wa4, work, lwork, ictx);
                 if (lres < 0) {
                         info = -1;
                         goto fini;
@@ -262,9 +298,14 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 
 		/* inner loop. */
 		for (;;) {
+			if (rank == 0)
+				printf("pLMDIF: begin inner iteration\n");
+
 			/* determine the levenberg-marquardt parameter. */
 			double *p = wa1;
 			par = lmpar(n, R, n, ipvt, diag, qtf, delta, p, wa2, wa3, wa4);
+			if (rank == 0)
+				printf("pLMDIF: LM parameter %f\n", par);
 
 			/* store the direction p and x + p. calculate the norm of p. */
 			for (int j = 0; j < n; ++j) {
