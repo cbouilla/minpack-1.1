@@ -67,10 +67,10 @@
  *         info = 7  tol is too small. no further improvement in
  *                   the approximate solution x is possible.
  *
- *       ictx is a BLACS context.
+ *       ctx is a BLACS grid context.
  */
 
-int plmdif1(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fvec, double tol, int ictx)
+int plmdif1(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fvec, double tol, int ctx)
 {
 	int info = 0;
 
@@ -84,7 +84,7 @@ int plmdif1(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *f
 	double xtol = tol;
 	double gtol = 0;
     int nfev = 0;
-	info = plmdif(fcn, farg, m, n, x, fvec, ftol, xtol, gtol, maxfev, &nfev, ictx);
+	info = plmdif(fcn, farg, m, n, x, fvec, ftol, xtol, gtol, maxfev, &nfev, ctx);
 	if (info == 8)
 		info = 4;
     return info;

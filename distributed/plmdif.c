@@ -46,7 +46,6 @@ static int jac_qrfac(pminpack_func_mn fcn, void *farg, double *x, double *fvec, 
 	
 	int mb = pfjac_desc[MB_];
 	int nb = pfjac_desc[NB_];
-	int lld = pfjac_desc[LLD_];
 	int n = pfjac_desc[N_];
 	int m = pfjac_desc[M_];
 
@@ -75,12 +74,6 @@ static int jac_qrfac(pminpack_func_mn fcn, void *farg, double *x, double *fvec, 
 	if (lapack_info != 0)
 		return -1;
 
-	/* in LAPACK    : On exit, if JPVT(J)=K, then the J-th column of A*P was the
-                          the K-th column of A.
-           in ScaLAPACK : On exit, if IPIV(I) = K, the local i-th column of sub( A )*P
-*          was the global K-th column of sub( A )
-        */
-
 	/* distribute fvec to pfvec */
 	extrablacs_dgeld2d(fvec, m, pfvec, 0, pfvec_desc);
 
@@ -99,11 +92,11 @@ static int jac_qrfac(pminpack_func_mn fcn, void *farg, double *x, double *fvec, 
 		printf("\tpLMDIF: process (%d, %d) qtf[%d] = %f\n", myrow, mycol, i, qtf[i]); 
 	fflush(stdout);
 
-	/* copy R --- overkill, the wanted matrix is triangular */
+	/* copy R --- only the upper triangular part */
 	//for (int j = 0; j < n; j++)
 	//	for (int i = 0; i <= j; i++)
 	//		R[j * n + i] = pfjac[j * lld + i];
-	extrablacs_dgedl2d(n, n, pfjac, 1, 1, pfjac_desc, R, n);
+	extrablacs_dtrdl2d("Upper-triangular", "Non-unit Diagonal", n, n, pfjac, 1, 1, pfjac_desc, R, n);
 
 	/* recover ipvt */
 	int ipvt_desc[9];
