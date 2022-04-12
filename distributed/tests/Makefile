@@ -1,11 +1,8 @@
 CFLAGS += -Wall -Wextra -I.. -g
 LDLIBS += -lm 
 
-CFLAGS += $(shell pkg-config --cflags blas lapacke scalapack-openmpi)
-LDLIBS += $(shell pkg-config --libs blas lapacke scalapack-openmpi)
-
-#LDFLAGS += -L.
-#LDLIBS += -llapack -lrefblas
+CFLAGS += $(shell pkg-config --cflags scalapack-openmpi)
+LDLIBS += $(shell pkg-config --libs scalapack-openmpi)
 
 all: check
 
