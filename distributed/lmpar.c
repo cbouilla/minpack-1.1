@@ -168,6 +168,9 @@ double lmpar(int n, double *r, int ldr, int *ipvt, double *diag, double par,
 	if (par == 0)
 		par = gnorm / dxnorm;
 
+	if (talk)
+			printf("pLMDIF:       - bounds : [%f;  %f]\n", parl, paru);
+
 	/* beginning of an iteration. */
 	for (;;) {
 		++iter;
