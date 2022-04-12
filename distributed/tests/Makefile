@@ -14,9 +14,10 @@ all: check
 test_plmdif1.o ls.o: ls.h
 
 test_plmdif1: test_plmdif1.o ls.o ../libminpack.a 
+test_extrablacs: test_extrablacs.o ../libminpack.a 
 
-check: test_plmdif1 
-	prove -f --exec mpiexec ./test_plmdif1
+check: test_extrablacs  test_plmdif1 
+	prove -f --exec mpiexec ./test_extrablacs ./test_plmdif1 
 
 clean:
-	rm -f *.o test_plmdif1
+	rm -f *.o test_plmdif1 test_extrablacs

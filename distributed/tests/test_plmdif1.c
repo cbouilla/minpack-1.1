@@ -17,7 +17,7 @@
 #include "pminpack.h"
 #include "ls.h"
 
-int lmdif1_known_failures[] = { 26, 27, 38, 40, -1 };
+int lmdif1_known_failures[] = { 26, 27, 35, 38, 40, -1 };
 
 /* global variables */
 int nprob;
@@ -59,6 +59,7 @@ void do_test(int ic, int rank, int ictx)
 	nfev = 0;
 	njev = 0;
 	int info = plmdif1(fcn, NULL, m, n, x, fvec, tol, ictx);	// find solution
+	MPI_Barrier(MPI_COMM_WORLD);
 
 	if (rank > 0)
 		return;
@@ -107,27 +108,26 @@ int main()
 	/* MPI setup */
 	MPI_Init(NULL, NULL);
 
-	/* BLACS setup */
-	int nprow = 4;
-	int npcol = 1;
-	int ictx;
-	int zero = 0;
-	int one = 1;
-	Cblacs_get(0, 0, &ictx);   // get BLACS context
+	/* BLACS setup --- obtain system context */
+	int nprow = 2;
+	int npcol = 2;
+	int sysctx;
+	Cblacs_get(0, 0, &sysctx);
 
+	/* obtain BLACS grid context */
+	int ctx;
 	int rank, nprocs;	
-	int prow, pcol;
-	
 	Cblacs_pinfo(&rank, &nprocs);
-	Cblacs_gridinit(&ictx, "Row-Major", nprow, npcol);
-
+	Cblacs_gridinit(&ctx, "Row-Major", nprow, npcol);
 
 	/* TAP protocol */
 	if (rank == 0)
 		printf("1..53\n");
 
-	for (int i = 0; i < 53; i++)
-		do_test(i, rank, ictx);
+	for (int i = 0; i < 53; i++) {
+		do_test(i, rank, ctx);
+		MPI_Barrier(MPI_COMM_WORLD);
+	}
 
 	if (rank == 0) {
 		printf("\n\n################################\n");
@@ -137,8 +137,7 @@ int main()
 			printf("# %5d%5d%5d%5d%6d%6d%6d%16.7e\n", i + 1, np[i], na[i], ma[i], nf[i], nj[i], nx[i], fnm[i]);
 	}
 
-	/* BLACS and MPI cleanup */
-	Cblacs_exit(1);
+	/* MPI cleanup */
 	MPI_Finalize();
 	return EXIT_SUCCESS;
 }

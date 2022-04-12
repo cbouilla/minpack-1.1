@@ -2,42 +2,57 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <cblas.h>
-#include <lapacke.h>
+
+#include <mpi.h>
 
 #include "pminpack.h"
 
-static int query_LAPACK_worksize(int m, int n, int ldfjac)
+static int query_LAPACK_worksize(int * pfjac_desc, int * fvec_desc)
 {
 	int lwork = -1;
 	double work[1];
 	int info;
 
-	/* query LAPACK */
-	info = LAPACKE_dgeqp3_work(LAPACK_COL_MAJOR, m, n, NULL, ldfjac, NULL, NULL, work, lwork);
+	/* query scaLAPACK */
+	int m = pfjac_desc[M_];
+	int n = pfjac_desc[N_];
+	double *pfjac = NULL;
+	int *ipiv = NULL;
+	double *tau = NULL;
+	info = scalapack_pdgeqpf(m, n, pfjac, 1, 1, pfjac_desc, ipiv, tau, work, lwork);
 	if (info != 0)
 		return -1;
 	int needed_dgeqp3 = work[0];
-	if (needed_dgeqp3 < 3 * n + 1)
-		return -1;
-
-	info = LAPACKE_dormqr_work(LAPACK_COL_MAJOR, 'L', 'T', m, 1, n, NULL, ldfjac, NULL, NULL, m, work, lwork);
+	
+	double *fvec = NULL;
+	info = scalapack_pdormqr("Left", "Transpose", m, 1, n, pfjac, 1, 1, pfjac_desc, tau, 
+		fvec, 1, 1, fvec_desc, work, lwork);
 	if (info != 0)
 		return -1;
 	int needed_dormqr = work[0];
-	if (needed_dormqr < n)
-		return -1;
+
 	/* take max */
 	int max = needed_dgeqp3 > needed_dormqr ? needed_dgeqp3 : needed_dormqr;
 	return max;
 }
 
 
-static int jac_qrfac(pminpack_func_mn fcn, void *farg, int n, int m, double *x, double *fvec, 
-	double *fjac, ptrdiff_t ldfjac, int *ipvt, double *R, double *qtf, 
-                 int *nfev, double *wa1, double *wa4, double *work, int lwork, int ictx)
+static int jac_qrfac(pminpack_func_mn fcn, void *farg, double *x, double *fvec, double *pfvec, int *pfvec_desc,
+	double *pfjac, int * pfjac_desc, int *ipvt, double *R, double *qtf, 
+                 int *nfev, double *tau, double *wa4, double *work, int lwork, int ctx)
 {
-	double eps = sqrt(MINPACK_EPSILON);
+	int nprow, npcol, myrow, mycol;
+	Cblacs_gridinfo(ctx, &nprow, &npcol, &myrow, &mycol);
+	
+	int mb = pfjac_desc[MB_];
+	int nb = pfjac_desc[NB_];
+	int lld = pfjac_desc[LLD_];
+	int n = pfjac_desc[N_];
+	int m = pfjac_desc[M_];
 
+	/* compute the jacobian by forward-difference approximation and store it
+	   in 2D block-cyclic distribution */
+	double eps = sqrt(MINPACK_EPSILON);
 	for (int j = 0; j < n; ++j) {
 		double temp = x[j];
 		double h = eps * fabs(x[j]);
@@ -46,35 +61,55 @@ static int jac_qrfac(pminpack_func_mn fcn, void *farg, int n, int m, double *x, 
 		x[j] += h;
 		(*fcn)(farg, m, n, x, wa4);
 		x[j] = temp;              // restore x[j]
-		for (int i = 0; i < m; ++i)
-			fjac[i + j * ldfjac] = (wa4[i] - fvec[i]) / h;
+		for (int i = 0; i < m; i++)
+			wa4[i] = (wa4[i] - fvec[i]) / h;
+		extrablacs_rvec2dmat(wa4, m, pfjac, j, pfjac_desc);
 	}
 	*nfev += n;
 
-	/* set all columns free */
-	for (int j = 0; j < n; j++)
-		ipvt[j] = 0;
+	/* Compute the QR factorization of the jacobian. */
+	int pfjac_ncol = scalapack_numroc(n, nb, mycol, 0, npcol);
+	int local_ipvt[pfjac_ncol];
 
-	/* compute the QR factorization of the jacobian. */
-	double *tau = wa1;
-	int lapack_info = LAPACKE_dgeqp3_work(LAPACK_COL_MAJOR, m, n, fjac, ldfjac, ipvt, tau, work, lwork);
-	// dgeqp3_(&m, &n, fjac, &ldfjac, ipvt, tau, work, &lwork, &lapack_info);
+	int lapack_info = scalapack_pdgeqpf(m, n, pfjac, 1, 1, pfjac_desc, local_ipvt, tau, work, lwork);
 	if (lapack_info != 0)
 		return -1;
 
-	/* qtf <-- (Q transpose)*fvec */
-	for (int i = 0; i < m; ++i)
-		wa4[i] = fvec[i];
-	lapack_info = LAPACKE_dormqr_work(LAPACK_COL_MAJOR, 'L', 'T', m, 1, n, fjac, ldfjac, tau, wa4, m, work, lwork);
+	/* in LAPACK    : On exit, if JPVT(J)=K, then the J-th column of A*P was the
+                          the K-th column of A.
+           in ScaLAPACK : On exit, if IPIV(I) = K, the local i-th column of sub( A )*P
+*          was the global K-th column of sub( A )
+        */
+
+	/* distribute fvec to pfvec */
+	extrablacs_rvec2dmat(fvec, m, pfvec, 0, pfvec_desc);
+
+	/* Compute qtf <-- (Q transpose)*fvec */	
+	lapack_info = scalapack_pdormqr("Left", "Transpose", m, 1, n, pfjac, 1, 1, pfjac_desc, tau,
+                                         pfvec, 1, 1, pfvec_desc, work, lwork);
 	if (lapack_info != 0)
 		return -1;
-	for (int j = 0; j < n; ++j)
-		qtf[j] = wa4[j];
 
-	/* copy R */
-	for (int j = 0; j < n; j++)
-		for (int i = 0; i <= j; i++)
-			R[j * n + i] = fjac[j * ldfjac + i];
+	/* recover qtf */
+	// for (int j = 0; j < n; ++j)
+	// 	qtf[j] = wa4[j];
+	extrablacs_dmat2rmat(n, 1, pfvec, 1, 1, pfvec_desc, qtf, n);
+
+	for (int i = 0; i < n; i++)
+		printf("\tpLMDIF: process (%d, %d) qtf[%d] = %f\n", myrow, mycol, i, qtf[i]); 
+	fflush(stdout);
+
+	/* copy R --- overkill, the wanted matrix is triangular */
+	//for (int j = 0; j < n; j++)
+	//	for (int i = 0; i <= j; i++)
+	//		R[j * n + i] = pfjac[j * lld + i];
+	extrablacs_dmat2rmat(n, n, pfjac, 1, 1, pfjac_desc, R, n);
+
+	/* recover ipvt */
+	int ipvt_desc[9];
+	lapack_info = scalapack_descinit(ipvt_desc, 1, n, mb, nb, 0, 0, ctx, 1);
+	extrablacs_idmat2rmat(1, n, local_ipvt, 1, 1, ipvt_desc, ipvt, 1);
+
 	return 0;
 }
 
@@ -186,9 +221,10 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 
         /* this will be allocated dynamically by this function */ 
         double *work = NULL;
-        double *fjac = NULL;
+        double *pfjac = NULL;
         double *R = NULL;
         double *wa4 = NULL;
+        double *pfvec = NULL;
         double diag[n], qtf[n], wa1[n], wa2[n], wa3[n];
         int ipvt[n];
 	double fnorm, delta, xnorm, gnorm;
@@ -197,34 +233,53 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 	if (n <= 0 || m < n || ftol < 0 || xtol < 0 || gtol < 0 || maxfev <= 0)
 		goto fini;
 
-	/* setup pfjac */	
+	/* setup pfjac and pfvec */	
 	int rank, nprocs;
 	int nprow, npcol, myrow, mycol;
-	int nb = 64;
-	int mb = 64;
+	int nb = 5;
+	int mb = 5;
 	Cblacs_pinfo(&rank, &nprocs);
 	Cblacs_gridinfo(ictx, &nprow, &npcol, &myrow, &mycol);
-	long pfjac_nrow = scalapack_numroc(m, mb, myrow, 0, nprow);
-	long pfjac_ncol = scalapack_numroc(n, nb, mycol, 0, npcol);
+	int pfjac_nrow = scalapack_numroc(m, mb, myrow, 0, nprow);
+	int pfjac_ncol = scalapack_numroc(n, nb, mycol, 0, npcol);
+	if (pfjac_nrow == 0)
+		pfjac_nrow = 1; 
 
 	if (rank == 0) {
 		printf("pLMDIF: %d functions in %d variables on a %d x %d process grid\n", m, n, nprow, npcol);
-		char fjacB[16], pfjacB[16];
+		char fjacB[16];
 		human_format(fjacB, (long) 8 * n * m);
-		human_format(pfjacB, (long) 8 * pfjac_ncol * pfjac_nrow);
-		printf("pLMDIF: full jacobian is %sB. Each process holds %sB\n", fjacB, pfjacB);
+		printf("pLMDIF: full jacobian is %sB\n", fjacB);
 	}
+	char pfjacB[16];
+	human_format(pfjacB, (long) 8 * pfjac_ncol * pfjac_nrow);
+	printf("\tpLMDIF: process (%d, %d) owns local matrix of size %d x %d (%sB)\n", 
+		myrow, mycol, pfjac_nrow, pfjac_ncol, pfjacB);
+	fflush(stdout);
+
+	int pfjac_desc[9];
+	info = scalapack_descinit(pfjac_desc, m, n, mb, nb, 0, 0, ictx, pfjac_nrow);
+	if (info < 0)
+		goto fini;
+
+	int pfvec_desc[9];
+	info = scalapack_descinit(pfvec_desc, m, 1, mb, nb, 0, 0, ictx, m);
+	if (info < 0)
+		goto fini;
 
         /* allocate memory */
-        ptrdiff_t ldfjac = m;
-        int lwork = query_LAPACK_worksize(m, n, ldfjac);
+        int lwork = query_LAPACK_worksize(pfjac_desc, pfvec_desc);
+	printf("\tpLMDIF: process (%d, %d) scalapack wants %d double for scratch\n", myrow, mycol, lwork); 
+	fflush(stdout);
         if (lwork < 0)
                 goto fini;
-        fjac = malloc(n * ldfjac * sizeof(*fjac));
-	work = malloc((m + lwork) * sizeof(*work)); // extra space for wa4
+       
+       	pfvec = malloc((long) pfjac_nrow * sizeof(*pfvec));
+        pfjac = malloc((long) pfjac_nrow * pfjac_ncol * sizeof(*pfjac));
+	work = malloc((m + lwork) * sizeof(*work));     // extra space for wa4
         R = malloc(n * n * sizeof(*R));
         wa4 = malloc(m * sizeof(*wa4));
-	if (fjac == NULL || work == NULL || R == NULL || wa4 == NULL)
+	if (pfvec == NULL || pfjac == NULL || work == NULL || R == NULL || wa4 == NULL)
 		goto fini;
 
 	/* evaluate the function at the starting point and calculate its norm */
@@ -236,12 +291,13 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 	double par = 0;
 	int iter = 1;
 
+	fflush(stdout);
 	/* outer loop */
 	for (;;) {
-		if (rank == 0)
-			printf("pLMDIF: begin outer iteration\n");
+		MPI_Barrier(MPI_COMM_WORLD);
+		printf("LMDIF: process (%d, %d) begin outer iteration. nfev = %d / %d\n", myrow, mycol, *nfev, maxfev);
 
-		int lres = jac_qrfac(fcn, farg, n, m, x, fvec, fjac, ldfjac, ipvt, R, qtf, nfev, wa1, wa4, work, lwork, ictx);
+		int lres = jac_qrfac(fcn, farg, x, fvec, pfvec, pfvec_desc, pfjac, pfjac_desc, ipvt, R, qtf, nfev, wa1, wa4, work, lwork, ictx);
                 if (lres < 0) {
                         info = -1;
                         goto fini;
@@ -286,6 +342,8 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 			}
 		}
 
+		printf("LMDIF: process (%d, %d) gnorm = %f, xnorm = %f, fnorm = %f\n", myrow, mycol, gnorm, xnorm, fnorm);
+
 		/* test for convergence of the gradient norm. */
 		if (gnorm <= gtol)
 			info = 4;
@@ -298,8 +356,7 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 
 		/* inner loop. */
 		for (;;) {
-			if (rank == 0)
-				printf("pLMDIF: begin inner iteration\n");
+			printf("LMDIF: process (%d, %d) begin inner iteration\n", myrow, mycol);
 
 			/* determine the levenberg-marquardt parameter. */
 			double *p = wa1;
@@ -379,6 +436,9 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 				xnorm = enorm(n, wa2);
 				fnorm = fnorm1;
 				++iter;
+		
+				if (rank == 0)
+					printf("pLMDIF: succesful iteration. fnorm = %f\n", fnorm);
 			}
 
 			/* tests for convergence */
@@ -410,9 +470,12 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 	}			/* outer loop. */
 
  fini:
+ 	MPI_Barrier(MPI_COMM_WORLD);
+	printf("pLMDIF: rank %d, finished (info=%d)\n", rank, info);
+
 	/* termination, either normal or user imposed. */
 	free(work);
-        free(fjac);
+        free(pfjac);
         free(R);
         free(wa4);
 	return info;
