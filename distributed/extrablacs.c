@@ -9,7 +9,7 @@
  * A is a 2D block cyclicly distributed array
  * The column index jA is zero-based.
  */
-void extrablacs_dgeld2d(double *v, int vlen, double *A, int jA, int *descA)
+void extrablacs_dgeld2d(const double *v, int vlen, double *A, int jA, const int *descA)
 {
 	int ctx = descA[CTXT_];
 	int mb = descA[MB_];
@@ -43,7 +43,7 @@ void extrablacs_dgeld2d(double *v, int vlen, double *A, int jA, int *descA)
 /*
  * Copy a distributed (sub-)matrix A[iA:iA+m, jA:jA+n] to a local array B on all processes
  */
-void extrablacs_dgedl2d(int m, int n, double *A, int iA, int jA, int *descA, 
+void extrablacs_dgedl2d(int m, int n, const double *A, int iA, int jA, const int *descA, 
 					    double *B, int ldB)
 {
 	int ctxA = descA[CTXT_];
@@ -93,7 +93,7 @@ void extrablacs_dgedl2d(int m, int n, double *A, int iA, int jA, int *descA,
  * Copy a distributed (sub-)matrix A[iA:iA+m, jA:jA+n] to a local array B on all processes
  */
 void extrablacs_dtrdl2d(const char *uplo, const char *diag, int m, int n, 
-						double *A, int iA, int jA, int *descA, double *B, int ldB)
+						const double *A, int iA, int jA, const int *descA, double *B, int ldB)
 {
 	int ctxA = descA[CTXT_];
 	int mA = descA[M_];
@@ -139,7 +139,7 @@ void extrablacs_dtrdl2d(const char *uplo, const char *diag, int m, int n,
 }
 
 
-void extrablacs_igedl2d(int m, int n, int *A, int iA, int jA, int *descA, 
+void extrablacs_igedl2d(int m, int n, const int *A, int iA, int jA, const int *descA, 
 						  int *B, int ldB)
 {
 	int ctxA = descA[CTXT_];

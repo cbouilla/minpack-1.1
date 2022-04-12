@@ -91,13 +91,12 @@
  *     burton s. garbow, kenneth e. hillstrom, jorge j. more 
  */
 
-double lmpar(int n, double *r, int ldr, int *ipvt, double *diag, 
+double lmpar(int n, double *r, int ldr, int *ipvt, double *diag, double par,
 	double *qtb, double delta, double *x, double *sdiag, double *wa1, double *wa2)
 {
 	/* dwarf is the smallest positive magnitude. */
 	double dwarf = MINPACK_DWARF;
 	ptrdiff_t r_dim1 = ldr;
-	double par = 0;
 
 	/* Compute and store in x the gauss-newton direction. If the
 	   jacobian is rank-deficient, obtain a least squares solution. */

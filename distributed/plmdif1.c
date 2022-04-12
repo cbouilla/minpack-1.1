@@ -1,49 +1,47 @@
 #include "pminpack.h"
 
-/*     Subroutine plmdif1
+/* plmdif1
+ * -------
  *
- *     The purpose of plmdif1 is to minimize the sum of the squares of
- *     m nonlinear functions in n variables by a modification of the
- *     levenberg-marquardt algorithm.  This is done by using the more
- *     general least-squares solver plmdif.  The user must provide a
- *     subroutine which calculates the functions.  The jacobian is
- *     then calculated by a forward-difference approximation.
+ * The purpose of plmdif1 is to minimize the sum of the squares of m nonlinear
+ * functions in n variables by a modification of the levenberg-marquardt
+ * algorithm.  This is done by using the more general least-squares solver
+ * plmdif.  The user must provide a subroutine which calculates the functions.
+ * The jacobian is then calculated by a forward-difference approximation.
  *
- *       fcn is the name of the user-supplied subroutine which
- *         calculates the functions.  fcn must be declared
- *         in an external statement in the user calling
- *         program, and should be written as follows.
+ * This is a collective operation that must be called by all processes in a
+ * (previously initialized) BLACS grid.  All input arguments, except fargs,
+ * must have the same values on all processes.  All output values will be the
+ * same on all processes.
  *
- *         subroutine fcn(m,n,x,fvec)
- *         integer m,n
- *         double precision x(n),fvec(m)
- *         ----------
- *         calculate the functions at x and
- *         return this vector in fvec.
- *         ----------
- *         return
- *         end
+ * Arguments:
  *
- *       m is a positive integer input variable set to the number
- *         of functions.
+ * - fcn is the name of the user-supplied subroutine which calculates the
+ *   functions.  See pminpack.h for the actual specification of fcn.
  *
- *       n is a positive integer input variable set to the number
- *         of variables.  n must not exceed m.
+ * - farg is an opaque pointer that will be forwarded to all evaluations of fcn
+ *   in this process.
  *
- *       x is an array of length n.  On input x must contain
- *         an initial estimate of the solution vector.  On output x
- *         contains the final estimate of the solution vector.
+ * - m is a positive integer input variable set to the number of functions. Same
+ *   value on all processes.
  *
- *       fvec is an output array of length m which contains
- *         the functions evaluated at the output x.
+ * - n is a positive integer input variable set to the number of variables.  n
+ *   must not exceed m.  Same value on all processes.
  *
- *       tol is a nonnegative input variable.  Termination occurs
- *         when the algorithm estimates either that the relative
- *         error in the sum of squares is at most tol or that
- *         the relative error between x and the solution is at
- *         most tol.
+ * - x is an array of length n.  On input x must contain an initial estimate of
+ *   the solution vector.  On output x contains the final estimate of the
+ *   solution vector.  Same value on all processes.
  *
- *       info is an integer output variable set as follows.
+ * - fvec is an output array of length m which contains the functions evaluated
+ *   at the output x.  Will have the same value on all processes.
+ *
+ * - tol is a nonnegative input variable.  Termination occurs when the algorithm
+ *   estimates either that the relative error in the sum of squares is at most
+ *   tol or that the relative error between x and the solution is at most tol.
+ *
+ * - ctx is a BLACS grid context.
+ *
+ * The return value is an integer output variable info set as follows.
  *
  *         info = 0  improper input parameters.
  *
@@ -66,11 +64,9 @@
  *
  *         info = 7  tol is too small. no further improvement in
  *                   the approximate solution x is possible.
- *
- *       ctx is a BLACS grid context.
  */
-
-int plmdif1(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fvec, double tol, int ctx)
+int plmdif1(pminpack_func_mn fcn, void *farg, int m, int n, double *x, 
+            double *fvec, double tol, int ctx)
 {
 	int info = 0;
 

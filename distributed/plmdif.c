@@ -3,173 +3,69 @@
 #include <stddef.h>
 #include <cblas.h>
 
-#include <mpi.h>
-
 #include "pminpack.h"
 
-static int query_LAPACK_worksize(int * pfjac_desc, int * fvec_desc)
-{
-	int lwork = -1;
-	double work[1];
-	int info;
+static const int VERBOSE = 1;
 
-	/* query scaLAPACK */
-	int m = pfjac_desc[M_];
-	int n = pfjac_desc[N_];
-	double *pfjac = NULL;
-	int *ipiv = NULL;
-	double *tau = NULL;
-	info = scalapack_pdgeqpf(m, n, pfjac, 1, 1, pfjac_desc, ipiv, tau, work, lwork);
-	if (info != 0)
-		return -1;
-	int needed_dgeqp3 = work[0];
-	
-	double *fvec = NULL;
-	info = scalapack_pdormqr("Left", "Transpose", m, 1, n, pfjac, 1, 1, pfjac_desc, tau, 
-		fvec, 1, 1, fvec_desc, work, lwork);
-	if (info != 0)
-		return -1;
-	int needed_dormqr = work[0];
-
-	/* take max */
-	int max = needed_dgeqp3 > needed_dormqr ? needed_dgeqp3 : needed_dormqr;
-	return max;
-}
-
-
-static int jac_qrfac(pminpack_func_mn fcn, void *farg, double *x, double *fvec, double *pfvec, int *pfvec_desc,
-	double *pfjac, int * pfjac_desc, int *ipvt, double *R, double *qtf, 
-                 int *nfev, double *tau, double *wa4, double *work, int lwork, int ctx)
-{
-	int nprow, npcol, myrow, mycol;
-	Cblacs_gridinfo(ctx, &nprow, &npcol, &myrow, &mycol);
-	
-	int mb = pfjac_desc[MB_];
-	int nb = pfjac_desc[NB_];
-	int n = pfjac_desc[N_];
-	int m = pfjac_desc[M_];
-
-	/* compute the jacobian by forward-difference approximation and store it
-	   in 2D block-cyclic distribution */
-	double eps = sqrt(MINPACK_EPSILON);
-	for (int j = 0; j < n; ++j) {
-		double temp = x[j];
-		double h = eps * fabs(x[j]);
-		if (h == 0)
-			h = eps;
-		x[j] += h;
-		(*fcn)(farg, m, n, x, wa4);
-		x[j] = temp;              // restore x[j]
-		for (int i = 0; i < m; i++)
-			wa4[i] = (wa4[i] - fvec[i]) / h;
-		extrablacs_dgeld2d(wa4, m, pfjac, j, pfjac_desc);
-	}
-	*nfev += n;
-
-	/* Compute the QR factorization of the jacobian. */
-	int pfjac_ncol = scalapack_numroc(n, nb, mycol, 0, npcol);
-	int local_ipvt[pfjac_ncol];
-
-	int lapack_info = scalapack_pdgeqpf(m, n, pfjac, 1, 1, pfjac_desc, local_ipvt, tau, work, lwork);
-	if (lapack_info != 0)
-		return -1;
-
-	/* distribute fvec to pfvec */
-	extrablacs_dgeld2d(fvec, m, pfvec, 0, pfvec_desc);
-
-	/* Compute qtf <-- (Q transpose)*fvec */	
-	lapack_info = scalapack_pdormqr("Left", "Transpose", m, 1, n, pfjac, 1, 1, pfjac_desc, tau,
-                                         pfvec, 1, 1, pfvec_desc, work, lwork);
-	if (lapack_info != 0)
-		return -1;
-
-	/* recover qtf */
-	// for (int j = 0; j < n; ++j)
-	// 	qtf[j] = wa4[j];
-	extrablacs_dgedl2d(n, 1, pfvec, 1, 1, pfvec_desc, qtf, n);
-
-	for (int i = 0; i < n; i++)
-		printf("\tpLMDIF: process (%d, %d) qtf[%d] = %f\n", myrow, mycol, i, qtf[i]); 
-	fflush(stdout);
-
-	/* copy R --- only the upper triangular part */
-	//for (int j = 0; j < n; j++)
-	//	for (int i = 0; i <= j; i++)
-	//		R[j * n + i] = pfjac[j * lld + i];
-	extrablacs_dtrdl2d("Upper-triangular", "Non-unit Diagonal", n, n, pfjac, 1, 1, pfjac_desc, R, n);
-
-	/* recover ipvt */
-	int ipvt_desc[9];
-	lapack_info = scalapack_descinit(ipvt_desc, 1, n, mb, nb, 0, 0, ctx, 1);
-	extrablacs_igedl2d(1, n, local_ipvt, 1, 1, ipvt_desc, ipvt, 1);
-
-	return 0;
-}
-
-/*     subroutine plmdif
+/* plmdif
+ * ------
  *
- *     the purpose of plmdif is to minimize the sum of the squares of
- *     m nonlinear functions in n variables by a modification of
- *     the levenberg-marquardt algorithm. the user must provide a
- *     subroutine which calculates the functions. the jacobian is
- *     then calculated by a forward-difference approximation.
+ * The purpose of plmdif is to minimize the sum of the squares of m nonlinear
+ * functions in n variables by a modification of the levenberg-marquardt
+ * algorithm.  The user must provide a subroutine which calculates the
+ * functions.  The jacobian is then calculated by a forward-difference
+ * approximation.
+
+ * This is a collective operation that must be called by all processes in a
+ * (previously initialized) BLACS grid.  All input arguments, except farg, must
+ * have the same values on all processes.  All output values will be the same
+ * on all processes.
  *
- *       fcn is the name of the user-supplied subroutine which
- *         calculates the functions. fcn must be declared
- *         in an external statement in the user calling
- *         program, and should be written as follows.
+ * Arguments:
  *
- *         subroutine fcn(m,n,x,fvec)
- *         int m,n
- *         double precision x(n),fvec(m)
- *         ----------
- *         calculate the functions at x and
- *         return this vector in fvec.
- *         ----------
- *         return
- *         end
+ * - fcn is the name of the user-supplied subroutine which calculates the
+ *   functions.  See pminpack.h for the actual specification of fcn.
  *
- *       m is a positive int input variable set to the number
- *         of functions.
+ * - farg is an opaque pointer that will be forwarded to all evaluations of fcn
+ *   in this process.
  *
- *       n is a positive int input variable set to the number
- *         of variables. n must not exceed m.
+ * - m is a positive integer input variable set to the number of functions. Same
+ *   value on all processes.
  *
- *       x is an array of length n.  On input x must contain
- *         an initial estimate of the solution vector.  On output x
- *         contains the final estimate of the solution vector.
+ * - n is a positive integer input variable set to the number of variables.  n
+ *   must not exceed m.  Same value on all processes.
  *
- *       fvec is an output array of length m which contains
- *         the functions evaluated at the output x.
+ * - x is an array of length n.  On input x must contain an initial estimate of
+ *   the solution vector.  On output x contains the final estimate of the
+ *   solution vector.  Same value on all processes.
  *
- *       ftol is a nonnegative input variable.  Termination
- *         occurs when both the actual and predicted relative
- *         reductions in the sum of squares are at most ftol.
- *         Therefore, ftol measures the relative error desired
- *         in the sum of squares.
+ * - fvec is an output array of length m which contains the functions evaluated
+ *   at the output x.  Will have the same value on all processes.
  *
- *       xtol is a nonnegative input variable.  Termination
- *         occurs when the relative error between two consecutive
- *         iterates is at most xtol.  Therefore, xtol measures the
- *         relative error desired in the approximate solution.
+ * - ftol is a nonnegative input variable.  Termination occurs when both the
+ *   actual and predicted relative reductions in the sum of squares are at most
+ *   ftol.  Therefore, ftol measures the relative error desired in the sum of
+ *   squares.
  *
- *       gtol is a nonnegative input variable.  Termination
- *         occurs when the cosine of the angle between fvec and
- *         any column of the jacobian is at most gtol in absolute
- *         value.  Therefore, gtol measures the orthogonality
- *         desired between the function vector and the columns
- *         of the jacobian.
+ * - xtol is a nonnegative input variable.  Termination occurs when the relative
+ *   error between two consecutive iterates is at most xtol.  Therefore, xtol
+ *   measures the relative error desired in the approximate solution.
  *
- *       maxfev is a positive int input variable. termination
- *         occurs when the number of calls to fcn is at least
- *         maxfev by the end of an iteration.
+ * - gtol is a nonnegative input variable.  Termination occurs when the cosine
+ *   of the angle between fvec and any column of the jacobian is at most gtol
+ *   in absolute value.  Therefore, gtol measures the orthogonality desired
+ *   between the function vector and the columns of the jacobian.
  *
- *       info is an int output variable. if the user has
- *         terminated execution, info is set to the (negative)
- *         value of iflag. see description of fcn. otherwise,
- *         info is set as follows.
+ * - maxfev is a positive int input variable. termination occurs when the number
+ *   of calls to fcn is at least maxfev by the end of an iteration.
+ * 
+ * - nfev is an int output variable set to the number of calls to fcn.
  *
- *         info < 0  runtime error (scalapack or lapack).
+ * - ctx is a BLACS grid context.
+ *
+ * The return value is an integer output variable info set as follows.
+ *
+ *         info < 0  runtime error (scalapack, malloc, ...).
  *
  *         info = 0  improper input parameters.
  *
@@ -196,21 +92,140 @@ static int jac_qrfac(pminpack_func_mn fcn, void *farg, double *x, double *fvec, 
  *
  *         info = 8  gtol is too small. fvec is orthogonal to the
  *                   columns of the jacobian to machine precision.
- *
- *       nfev is an int output variable set to the number of
- *         calls to fcn.
- *
- *       ldfjac is a positive int input variable not less than m
- *         which specifies the leading dimension of the array fjac.
- *
  */
 
+/* Determine the worksize needed by ScaLAPACK operations */
+static int query_ScaLAPACK_worksize(int * pfjac_desc, int * fvec_desc)
+{
+	int lwork = -1; /* lwork queries */
+	double work[1];
+	int info;
+
+	int m = pfjac_desc[M_];
+	int n = pfjac_desc[N_];
+	double *pfjac = NULL;
+	int *ipiv = NULL;
+	double *tau = NULL;
+	info = scalapack_pdgeqpf(m, n, pfjac, 1, 1, pfjac_desc, ipiv, tau, work, lwork);
+	if (info != 0)
+		return -1;
+	int needed_dgeqp3 = work[0];
+	
+	double *fvec = NULL;
+	info = scalapack_pdormqr("Left", "Transpose", m, 1, n, pfjac, 1, 1, pfjac_desc, tau, 
+		fvec, 1, 1, fvec_desc, work, lwork);
+	if (info != 0)
+		return -1;
+	int needed_dormqr = work[0];
+
+	int max = needed_dgeqp3 > needed_dormqr ? needed_dgeqp3 : needed_dormqr;
+	return max;
+}
+
+/*
+ * Evaluate the jacobian maytox of fcn at x using forward-difference approximations.
+ * On input, fvec must contain the functions evaluated at x.
+ * x is modified (but restored to its initial value) by the function.
+ * Compute a QR factorization with column pivoting
+ * Return the triangular part in R (and in ipvt)
+ * On Exit, R contains the triangulat part, qtf contains (Q transpose)*fvec
+ */
+static int jac_qrfac(pminpack_func_mn fcn, void *farg, double *x, const double *fvec, double *pfvec, int *pfvec_desc,
+	double *pfjac, int * pfjac_desc, int *ipvt, double *R, double *qtf, 
+                 int *nfev, double *wa4, double *work, int lwork, int ctx, int talk)
+{
+	int nprow, npcol, myrow, mycol;
+	Cblacs_gridinfo(ctx, &nprow, &npcol, &myrow, &mycol);
+	int mb = pfjac_desc[MB_];
+	int nb = pfjac_desc[NB_];
+	int n = pfjac_desc[N_];
+	int m = pfjac_desc[M_];
+
+	int pfjac_ncol = scalapack_numroc(n, nb, mycol, 0, npcol);
+	int local_ipvt[pfjac_ncol];
+	double tau[pfjac_ncol];
+
+	/* compute the jacobian by forward-difference approximation and store it
+	   in 2D block-cyclic distribution */
+	double eps = sqrt(MINPACK_EPSILON);
+	double start = pminpack_wtime();
+	if (talk)
+		printf("LMDIF:   - Jacobian evaluation (forward-difference)\n");
+	for (int j = 0; j < n; ++j) {
+		if (talk) {
+			printf("\rLMDIF:     - column %d / %d", j, n);
+			fflush(stdout);
+		}
+		double temp = x[j];
+		double h = eps * fabs(x[j]);
+		if (h == 0)
+			h = eps;
+		x[j] += h;
+		(*fcn)(farg, m, n, x, wa4);
+		x[j] = temp;              // restore x[j]
+		for (int i = 0; i < m; i++)
+			wa4[i] = (wa4[i] - fvec[i]) / h;
+		extrablacs_dgeld2d(wa4, m, pfjac, j, pfjac_desc);
+	}
+	*nfev += n;
+	if (talk) {
+		printf("\n");
+		printf("LMDIF:     - Done in %.1fs\n", pminpack_wtime() - start);
+	}
+
+	/* Compute the QR factorization of the jacobian. */
+	if (talk)
+		printf("LMDIF:   - QR factorization (ScaLAPACK)\n");
+	start = pminpack_wtime();
+	int lapack_info = scalapack_pdgeqpf(m, n, pfjac, 1, 1, pfjac_desc, local_ipvt, tau, work, lwork);
+	if (lapack_info != 0)
+		return -1;
+	if (talk)
+		printf("LMDIF:     - Done in %.1fs\n", pminpack_wtime() - start);
+	
+	/* distribute fvec to pfvec */
+	if (talk)
+		printf("LMDIF:   - Other communications\n");
+	start = pminpack_wtime();
+	extrablacs_dgeld2d(fvec, m, pfvec, 0, pfvec_desc);
+
+	/* Compute qtf <-- (Q transpose)*fvec */	
+	lapack_info = scalapack_pdormqr("Left", "Transpose", m, 1, n, pfjac, 1, 1, pfjac_desc, tau,
+                                         pfvec, 1, 1, pfvec_desc, work, lwork);
+	if (lapack_info != 0)
+		return -1;
+
+	/* recover qtf */
+	// for (int j = 0; j < n; ++j)
+	// 	qtf[j] = wa4[j];
+	extrablacs_dgedl2d(n, 1, pfvec, 1, 1, pfvec_desc, qtf, n);
+
+	/* copy R --- only the upper triangular part */
+	//for (int j = 0; j < n; j++)
+	//	for (int i = 0; i <= j; i++)
+	//		R[j * n + i] = pfjac[j * lld + i];
+	extrablacs_dtrdl2d("Upper-triangular", "Non-unit Diagonal", n, n, pfjac, 1, 1, pfjac_desc, R, n);
+
+	/* recover ipvt */
+	int ipvt_desc[9];
+	lapack_info = scalapack_descinit(ipvt_desc, 1, n, mb, nb, 0, 0, ctx, 1);
+	extrablacs_igedl2d(1, n, local_ipvt, 1, 1, ipvt_desc, ipvt, 1);
+
+	if (talk)
+		printf("LMDIF:     - Done in %.1fs\n", pminpack_wtime() - start);
+	return 0;
+}
+
 int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fvec, 
-        double ftol, double xtol, double gtol, int maxfev, int *nfev, int ictx)
+        double ftol, double xtol, double gtol, int maxfev, int *nfev, int ctx)
 {
 	double factor = 100.;
 	int info = 0;
 	*nfev = 0;
+	int rank, nprocs;
+	int nprow, npcol, myrow, mycol;
+	Cblacs_pinfo(&rank, &nprocs);
+	Cblacs_gridinfo(ctx, &nprow, &npcol, &myrow, &mycol);
 
         /* this will be allocated dynamically by this function */ 
         double *work = NULL;
@@ -222,48 +237,45 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
         int ipvt[n];
 	double fnorm, delta, xnorm, gnorm;
 
+	int talk = VERBOSE && (rank == 0);
+	double start = pminpack_wtime();
+
 	/* check the input parameters for errors. */
 	if (n <= 0 || m < n || ftol < 0 || xtol < 0 || gtol < 0 || maxfev <= 0)
 		goto fini;
 
 	/* setup pfjac and pfvec */	
-	int rank, nprocs;
-	int nprow, npcol, myrow, mycol;
 	int nb = 5;
 	int mb = 5;
-	Cblacs_pinfo(&rank, &nprocs);
-	Cblacs_gridinfo(ictx, &nprow, &npcol, &myrow, &mycol);
 	int pfjac_nrow = scalapack_numroc(m, mb, myrow, 0, nprow);
 	int pfjac_ncol = scalapack_numroc(n, nb, mycol, 0, npcol);
 	if (pfjac_nrow == 0)
-		pfjac_nrow = 1; 
-
-	if (rank == 0) {
-		printf("pLMDIF: %d functions in %d variables on a %d x %d process grid\n", m, n, nprow, npcol);
-		char fjacB[16];
-		human_format(fjacB, (long) 8 * n * m);
-		printf("pLMDIF: full jacobian is %sB\n", fjacB);
+		pfjac_nrow = 1;
+	
+	if (talk) {
+		printf("pLMDIF: start");
+		printf("pLMDIF: - %d functions in %d variables on a %d x %d process grid\n", m, n, nprow, npcol);
+		char fjacB[16], pfjacB[16];
+		pminpack_human_format(fjacB, (long) 8 * n * m);
+		pminpack_human_format(pfjacB, (long) 8 * pfjac_ncol * pfjac_nrow);
+		printf("pLMDIF: - full jacobian matrix is %sB\n", fjacB);
+		printf("pLMDIF: - each process owns local matrix of size <= %d x %d (%sB)\n", 
+			pfjac_nrow, pfjac_ncol, pfjacB);
 	}
-	char pfjacB[16];
-	human_format(pfjacB, (long) 8 * pfjac_ncol * pfjac_nrow);
-	printf("\tpLMDIF: process (%d, %d) owns local matrix of size %d x %d (%sB)\n", 
-		myrow, mycol, pfjac_nrow, pfjac_ncol, pfjacB);
-	fflush(stdout);
 
+	/* setup descriptors for distributed arrays */
 	int pfjac_desc[9];
-	info = scalapack_descinit(pfjac_desc, m, n, mb, nb, 0, 0, ictx, pfjac_nrow);
+	info = scalapack_descinit(pfjac_desc, m, n, mb, nb, 0, 0, ctx, pfjac_nrow);
 	if (info < 0)
 		goto fini;
 
 	int pfvec_desc[9];
-	info = scalapack_descinit(pfvec_desc, m, 1, mb, nb, 0, 0, ictx, m);
+	info = scalapack_descinit(pfvec_desc, m, 1, mb, nb, 0, 0, ctx, m);
 	if (info < 0)
 		goto fini;
 
         /* allocate memory */
-        int lwork = query_LAPACK_worksize(pfjac_desc, pfvec_desc);
-	printf("\tpLMDIF: process (%d, %d) scalapack wants %d double for scratch\n", myrow, mycol, lwork); 
-	fflush(stdout);
+        int lwork = query_ScaLAPACK_worksize(pfjac_desc, pfvec_desc);
         if (lwork < 0)
                 goto fini;
        
@@ -279,18 +291,21 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 	*nfev = 1;
 	(*fcn) (farg, m, n, x, fvec);
 	fnorm = enorm(m, fvec);
+	if (talk)
+		printf("pLMDIF: |fvec| = %f at starting point\n", fnorm);
 
 	/* initialize levenberg-marquardt parameter and iteration counter */
 	double par = 0;
 	int iter = 1;
 
-	fflush(stdout);
 	/* outer loop */
 	for (;;) {
-		MPI_Barrier(MPI_COMM_WORLD);
-		printf("LMDIF: process (%d, %d) begin outer iteration. nfev = %d / %d\n", myrow, mycol, *nfev, maxfev);
+		if (talk)
+			printf("LMDIF: - outer iteration\n");
 
-		int lres = jac_qrfac(fcn, farg, x, fvec, pfvec, pfvec_desc, pfjac, pfjac_desc, ipvt, R, qtf, nfev, wa1, wa4, work, lwork, ictx);
+		int lres = jac_qrfac(fcn, farg, x, fvec, pfvec, pfvec_desc, 
+				     pfjac, pfjac_desc, ipvt, R, qtf, nfev, wa4, 
+				     work, lwork, ctx, talk);
                 if (lres < 0) {
                         info = -1;
                         goto fini;
@@ -335,8 +350,6 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 			}
 		}
 
-		printf("LMDIF: process (%d, %d) gnorm = %f, xnorm = %f, fnorm = %f\n", myrow, mycol, gnorm, xnorm, fnorm);
-
 		/* test for convergence of the gradient norm. */
 		if (gnorm <= gtol)
 			info = 4;
@@ -349,13 +362,14 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 
 		/* inner loop. */
 		for (;;) {
-			printf("LMDIF: process (%d, %d) begin inner iteration\n", myrow, mycol);
+			if (talk)
+				printf("LMDIF:   - inner iteration\n");
 
 			/* determine the levenberg-marquardt parameter. */
 			double *p = wa1;
-			par = lmpar(n, R, n, ipvt, diag, qtf, delta, p, wa2, wa3, wa4);
-			if (rank == 0)
-				printf("pLMDIF: LM parameter %f\n", par);
+			par = lmpar(n, R, n, ipvt, diag, par, qtf, delta, p, wa2, wa3, wa4);
+			if (talk)
+				printf("LMDIF:     - LM parameter = %f\n", par);
 
 			/* store the direction p and x + p. calculate the norm of p. */
 			for (int j = 0; j < n; ++j) {
@@ -430,8 +444,8 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 				fnorm = fnorm1;
 				++iter;
 		
-				if (rank == 0)
-					printf("pLMDIF: succesful iteration. fnorm = %f\n", fnorm);
+				if (talk)
+					printf("LMDIF:     - successful inner iteration. New |fvec| = %f\n", fnorm);
 			}
 
 			/* tests for convergence */
@@ -459,12 +473,12 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 			/* repeat if iteration unsuccessful. */
 			if (ratio >= 0.0001)
 				break;
-		}		/* inner loop */
-	}			/* outer loop. */
+		}	/* inner loop */
+	}	/* outer loop. */
 
  fini:
- 	MPI_Barrier(MPI_COMM_WORLD);
-	printf("pLMDIF: rank %d, finished (info=%d)\n", rank, info);
+ 	if (talk)
+		printf("pLMDIF: - finished (%.1fs)\n", pminpack_wtime() - start);
 
 	/* termination, either normal or user imposed. */
 	free(work);

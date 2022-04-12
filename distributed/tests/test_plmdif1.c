@@ -59,7 +59,6 @@ void do_test(int ic, int rank, int ictx)
 	nfev = 0;
 	njev = 0;
 	int info = plmdif1(fcn, NULL, m, n, x, fvec, tol, ictx);	// find solution
-	MPI_Barrier(MPI_COMM_WORLD);
 
 	if (rank > 0)
 		return;
@@ -126,7 +125,6 @@ int main()
 
 	for (int i = 0; i < 53; i++) {
 		do_test(i, rank, ctx);
-		MPI_Barrier(MPI_COMM_WORLD);
 	}
 
 	if (rank == 0) {

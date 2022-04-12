@@ -5,7 +5,7 @@
 
 /******************* utility functions ********************/
 
-double wtime()
+double pminpack_wtime()
 {
         struct timeval ts;
         gettimeofday(&ts, NULL);
@@ -13,7 +13,7 @@ double wtime()
 }
 
 /* represent n in <= 6 char  */
-void human_format(char * target, long n)
+void pminpack_human_format(char * target, long n)
 {
         if (n < 1000) {
                 sprintf(target, "%ld", n);
@@ -37,6 +37,7 @@ void human_format(char * target, long n)
         }
 }
 
+/****** ScaLAPACK wrappers */
 
 int scalapack_numroc(int n, int nb, int rank, int srcrank, int nprocs)
 {
