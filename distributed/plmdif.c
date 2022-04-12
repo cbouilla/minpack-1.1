@@ -1,6 +1,5 @@
 #include <math.h>
 #include <stdlib.h>
-#include <stddef.h>
 #include <cblas.h>
 #include <stdio.h>
 
@@ -151,7 +150,7 @@ static int jac_qrfac(pminpack_func_mn fcn, void *farg, double *x, const double *
 	double eps = sqrt(MINPACK_EPSILON);
 	double start = pminpack_wtime();
 	if (talk)
-		printf("LMDIF:   - Jacobian evaluation (forward-difference)\n");
+		printf("pLMDIF:   - Jacobian evaluation (forward-difference)\n");
 	for (int j = 0; j < n; ++j) {
 		if (talk) {
 			printf("\rLMDIF:     - column %d / %d", j, n);
@@ -171,22 +170,22 @@ static int jac_qrfac(pminpack_func_mn fcn, void *farg, double *x, const double *
 	*nfev += n;
 	if (talk) {
 		printf("\n");
-		printf("LMDIF:     - Done in %.1fs\n", pminpack_wtime() - start);
+		printf("pLMDIF:     - Done in %.1fs\n", pminpack_wtime() - start);
 	}
 
 	/* Compute the QR factorization of the jacobian. */
 	if (talk)
-		printf("LMDIF:   - QR factorization (ScaLAPACK)\n");
+		printf("pLMDIF:   - QR factorization (ScaLAPACK)\n");
 	start = pminpack_wtime();
 	int lapack_info = scalapack_pdgeqpf(m, n, pfjac, 1, 1, pfjac_desc, local_ipvt, tau, work, lwork);
 	if (lapack_info != 0)
 		return -1;
 	if (talk)
-		printf("LMDIF:     - Done in %.1fs\n", pminpack_wtime() - start);
+		printf("pLMDIF:     - Done in %.1fs\n", pminpack_wtime() - start);
 	
 	/* distribute fvec to pfvec */
 	if (talk)
-		printf("LMDIF:   - Other communications\n");
+		printf("pLMDIF:   - Other communications\n");
 	start = pminpack_wtime();
 	extrablacs_dgeld2d(fvec, m, pfvec, 0, pfvec_desc);
 
@@ -213,7 +212,7 @@ static int jac_qrfac(pminpack_func_mn fcn, void *farg, double *x, const double *
 	extrablacs_igedl2d(1, n, local_ipvt, 1, 1, ipvt_desc, ipvt, 1);
 
 	if (talk)
-		printf("LMDIF:     - Done in %.1fs\n", pminpack_wtime() - start);
+		printf("pLMDIF:     - Done in %.1fs\n", pminpack_wtime() - start);
 	return 0;
 }
 
@@ -302,7 +301,7 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 	/* outer loop */
 	for (;;) {
 		if (talk)
-			printf("LMDIF: - outer iteration\n");
+			printf("pLMDIF: - outer iteration\n");
 
 		int lres = jac_qrfac(fcn, farg, x, fvec, pfvec, pfvec_desc, 
 				     pfjac, pfjac_desc, ipvt, R, qtf, nfev, wa4, 
@@ -364,13 +363,13 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 		/* inner loop. */
 		for (;;) {
 			if (talk)
-				printf("LMDIF:   - inner iteration\n");
+				printf("pLMDIF:   - inner iteration\n");
 
 			/* determine the levenberg-marquardt parameter. */
 			double *p = wa1;
 			par = lmpar(n, R, n, ipvt, diag, par, qtf, delta, p, wa2, wa3, wa4);
 			if (talk)
-				printf("LMDIF:     - LM parameter = %f\n", par);
+				printf("pLMDIF:     - LM parameter = %f\n", par);
 
 			/* store the direction p and x + p. calculate the norm of p. */
 			for (int j = 0; j < n; ++j) {
@@ -446,7 +445,7 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 				++iter;
 		
 				if (talk)
-					printf("LMDIF:     - successful inner iteration. New |fvec| = %f\n", fnorm);
+					printf("pLMDIF:     - successful inner iteration. New |fvec| = %f\n", fnorm);
 			}
 
 			/* tests for convergence */
