@@ -1,6 +1,5 @@
 #include <math.h>
 #include <stdlib.h>
-#include <cblas.h>
 #include <stdio.h>
 
 #include "pminpack.h"
@@ -399,10 +398,12 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 			/* compute the scaled predicted reduction and
 			   the scaled directional derivative. */
 			for (int j = 0; j < n; ++j) {
+				wa3[j] = 0.0;
 				int l = ipvt[j] - 1;
-				wa3[j] = p[l];
+				double temp = p[l];
+				for (int i = 0; i <= j; ++i)
+					wa3[i] += R[i + j * n] * temp;
 			}
-			cblas_dtrmv(CblasColMajor, CblasUpper, CblasNoTrans, CblasNonUnit, n, R, n, wa3, 1);
 			double temp1 = enorm(n, wa3) / fnorm;
 			double temp2 = sqrt(par) * pnorm / fnorm;
 			double prered = temp1 * temp1 + 2 * temp2 * temp2;
