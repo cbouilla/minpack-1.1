@@ -36,9 +36,11 @@ int scalapack_pdgeqpf(int M, int N, double * A, int IA, int JA, int * DESCA, int
 int scalapack_pdormqr(char * SIDE, char * TRANS, int M, int N, int K, double * A, int IA, int JA, int * DESCA, double *TAU,
                       double * C, int IC, int JC, int * DESCC, double * WORK, int LWORK);
 
-void extrablacs_rvec2dmat(double *v, int vlen, double *A, int jA, int *descA);
-void extrablacs_dmat2rmat(int m, int n, double *A, int iA, int jA, int *descA, double *B, int ldB);
-void extrablacs_idmat2rmat(int m, int n, int *A, int iA, int jA, int *descA, int *B, int ldB);
+void extrablacs_dgeld2d(double *v, int vlen, double *A, int jA, int *descA);
+void extrablacs_dgedl2d(int m, int n, double *A, int iA, int jA, int *descA, double *B, int ldB);
+void extrablacs_dtrdl2d(const char *uplo, const char *diag, int m, int n, 
+                                                double *A, int iA, int jA, int *descA, double *B, int ldB);
+void extrablacs_igedl2d(int m, int n, int *A, int iA, int jA, int *descA, int *B, int ldB);
 
 /* scalapack functions */
 
@@ -63,6 +65,10 @@ extern void pdormqr_(const char * SIDE, const char * TRANS, const int * M, const
                      double * WORK, int * LWORK, int * INFO);
 extern void Cpdgemr2d(int m, int n, double *A, int IA, int JA, int *descA, 
                       double *B, int IB, int JB, int *descB, int gcontext);
+extern void Cpigemr2d(int m, int n, int *A, int IA, int JA, int *descA, 
+                      int *B, int IB, int JB, int *descB, int gcontext);
+extern void Cpdtrmr2d(const char *uplo, const char *diag, int m, int n, double *A, int IA, int JA, int *descA, 
+                      double *B, int IB, int JB, int *descB, int gcontext);
 
 /* BLACS functions */
 extern void Cblacs_get(int icontxt, int what, int *val);
@@ -70,5 +76,12 @@ extern void Cblacs_pinfo(int * rank, int * nprocs);
 extern void Cblacs_gridinfo(int ictx, int * nprow, int * npcol, int * myrow, int * mycol);
 extern void Cblacs_gridinit(int * ictx, const char * order, int nprow, int npcol);
 extern void Cblacs_gridexit(int ictx);
+
 extern void Cdgebs2d(int ctx, const char *scope, const char *top, int m, int n, double *A, int ldA);
 extern void Cdgebr2d(int ctx, const char *scope, const char *top, int m, int n, double *A, int ldA, int rsrc, int csrc);
+
+extern void Cigebs2d(int ctx, const char *scope, const char *top, int m, int n, int *A, int ldA);
+extern void Cigebr2d(int ctx, const char *scope, const char *top, int m, int n, int *A, int ldA, int rsrc, int csrc);
+
+extern void Cdtrbs2d(int ctx, const char *scope, const char *top, const char *uplo, const char *diag, int m, int n, double *A, int ldA);
+extern void Cdtrbr2d(int ctx, const char *scope, const char *top, const char *uplo, const char *diag, int m, int n, double *A, int ldA, int rsrc, int csrc);

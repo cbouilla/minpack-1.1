@@ -63,7 +63,7 @@ static int jac_qrfac(pminpack_func_mn fcn, void *farg, double *x, double *fvec, 
 		x[j] = temp;              // restore x[j]
 		for (int i = 0; i < m; i++)
 			wa4[i] = (wa4[i] - fvec[i]) / h;
-		extrablacs_rvec2dmat(wa4, m, pfjac, j, pfjac_desc);
+		extrablacs_dgeld2d(wa4, m, pfjac, j, pfjac_desc);
 	}
 	*nfev += n;
 
@@ -82,7 +82,7 @@ static int jac_qrfac(pminpack_func_mn fcn, void *farg, double *x, double *fvec, 
         */
 
 	/* distribute fvec to pfvec */
-	extrablacs_rvec2dmat(fvec, m, pfvec, 0, pfvec_desc);
+	extrablacs_dgeld2d(fvec, m, pfvec, 0, pfvec_desc);
 
 	/* Compute qtf <-- (Q transpose)*fvec */	
 	lapack_info = scalapack_pdormqr("Left", "Transpose", m, 1, n, pfjac, 1, 1, pfjac_desc, tau,
@@ -93,7 +93,7 @@ static int jac_qrfac(pminpack_func_mn fcn, void *farg, double *x, double *fvec, 
 	/* recover qtf */
 	// for (int j = 0; j < n; ++j)
 	// 	qtf[j] = wa4[j];
-	extrablacs_dmat2rmat(n, 1, pfvec, 1, 1, pfvec_desc, qtf, n);
+	extrablacs_dgedl2d(n, 1, pfvec, 1, 1, pfvec_desc, qtf, n);
 
 	for (int i = 0; i < n; i++)
 		printf("\tpLMDIF: process (%d, %d) qtf[%d] = %f\n", myrow, mycol, i, qtf[i]); 
@@ -103,12 +103,12 @@ static int jac_qrfac(pminpack_func_mn fcn, void *farg, double *x, double *fvec, 
 	//for (int j = 0; j < n; j++)
 	//	for (int i = 0; i <= j; i++)
 	//		R[j * n + i] = pfjac[j * lld + i];
-	extrablacs_dmat2rmat(n, n, pfjac, 1, 1, pfjac_desc, R, n);
+	extrablacs_dgedl2d(n, n, pfjac, 1, 1, pfjac_desc, R, n);
 
 	/* recover ipvt */
 	int ipvt_desc[9];
 	lapack_info = scalapack_descinit(ipvt_desc, 1, n, mb, nb, 0, 0, ctx, 1);
-	extrablacs_idmat2rmat(1, n, local_ipvt, 1, 1, ipvt_desc, ipvt, 1);
+	extrablacs_igedl2d(1, n, local_ipvt, 1, 1, ipvt_desc, ipvt, 1);
 
 	return 0;
 }

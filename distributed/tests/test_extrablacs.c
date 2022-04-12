@@ -82,7 +82,7 @@ int main()
 		local[i] = i;
 
 	int modified_jA = 751;
-	extrablacs_rvec2dmat(local, m, A, modified_jA, descA);
+	extrablacs_dgeld2d(local, m, A, modified_jA, descA);
 
 	/* check copy */
 	int ok = 1;
@@ -121,7 +121,7 @@ int main()
 
 	int iA = 100;
 	int jA = 740;
-	extrablacs_dmat2rmat(mm, nn, A, iA, jA, descA, L, mm);
+	extrablacs_dgedl2d(mm, nn, A, iA, jA, descA, L, mm);
 
 	/* check copy */
 	ok = 1;
