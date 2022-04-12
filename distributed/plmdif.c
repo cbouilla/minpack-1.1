@@ -253,7 +253,7 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 		pfjac_nrow = 1;
 	
 	if (talk) {
-		printf("pLMDIF: start");
+		printf("pLMDIF: start\n");
 		printf("pLMDIF: - %d functions in %d variables on a %d x %d process grid\n", m, n, nprow, npcol);
 		char fjacB[16], pfjacB[16];
 		pminpack_human_format(fjacB, (long) 8 * n * m);
