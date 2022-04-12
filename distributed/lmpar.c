@@ -129,7 +129,8 @@ double lmpar(int n, double *r, int ldr, int *ipvt, double *diag, double par,
 	double fp = dxnorm - delta;
 
 	if (fp <= 0.1 * delta) {
-		printf("pLMDIF:       - Gauss-Newton direction is OK (early abort)\n");
+		if (talk)
+			printf("pLMDIF:       - Gauss-Newton direction is OK (early abort)\n");
 		goto fini;
 	}
 
