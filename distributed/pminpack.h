@@ -43,7 +43,7 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 /* C equivalent of MINPACK routines */
 double enorm(int n, const double * x);
 double lmpar(int n, double *r, int ldr, int *ipvt, double *diag, double par,
-	double *qtb, double delta, double *x, double *sdiag, double *wa1, double *wa2);
+        double *qtb, double delta, double *x, double *sdiag, double *wa1, double *wa2, int talk);
 void qrsolv(int n, double *r, int ldr, int *ipvt, double *diag, double *qtb, double *x, double *sdiag, double *wa);
 
 /* utils */

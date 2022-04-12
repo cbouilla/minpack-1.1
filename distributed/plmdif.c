@@ -366,7 +366,7 @@ int plmdif(pminpack_func_mn fcn, void *farg, int m, int n, double *x, double *fv
 
 			/* determine the levenberg-marquardt parameter. */
 			double *p = wa1;
-			par = lmpar(n, R, n, ipvt, diag, par, qtf, delta, p, wa2, wa3, wa4);
+			par = lmpar(n, R, n, ipvt, diag, par, qtf, delta, p, wa2, wa3, wa4, talk);
 			if (talk)
 				printf("pLMDIF:     - LM parameter = %f\n", par);
 

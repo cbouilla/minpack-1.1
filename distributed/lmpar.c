@@ -92,8 +92,11 @@
  */
 
 double lmpar(int n, double *r, int ldr, int *ipvt, double *diag, double par,
-	double *qtb, double delta, double *x, double *sdiag, double *wa1, double *wa2)
+	double *qtb, double delta, double *x, double *sdiag, double *wa1, double *wa2, int talk)
 {
+	if (talk)
+		printf("pLMDIF:     - computing LM parameter (initial guess: %f)\n", par);
+
 	/* dwarf is the smallest positive magnitude. */
 	double dwarf = MINPACK_DWARF;
 	ptrdiff_t r_dim1 = ldr;
@@ -123,8 +126,11 @@ double lmpar(int n, double *r, int ldr, int *ipvt, double *diag, double par,
 		wa2[j] = diag[j] * x[j];
 	double dxnorm = enorm(n, wa2);
 	double fp = dxnorm - delta;
-	if (fp <= 0.1 * delta)
+
+	if (fp <= 0.1 * delta) {
+		printf("pLMDIF:       - Gauss-Newton direction is OK (early abort)\n");
 		goto fini;
+	}
 
 	/* if the jacobian is not rank deficient, the newton
 	   step provides a lower bound, parl, for the zero of
@@ -163,6 +169,9 @@ double lmpar(int n, double *r, int ldr, int *ipvt, double *diag, double par,
 	/* beginning of an iteration. */
 	for (;;) {
 		++iter;
+		if (talk)
+			printf("pLMDIF:       - iteration %d. LM par = %f\n", iter, par);
+		
 		/* evaluate the function at the current value of par. */
 		if (par == 0)
 			par = fmax(dwarf, 0.001 * paru);
@@ -177,10 +186,23 @@ double lmpar(int n, double *r, int ldr, int *ipvt, double *diag, double par,
 		fp = dxnorm - delta;
 
 		/* if the function is small enough, accept the current value
-		   of par. also test for the exceptional cases where parl
+		   of par.  Also test for the exceptional cases where parl
 		   is zero or the number of iterations has reached 10. */
-		if (fabs(fp) <= 0.1 * delta || (parl == 0 && fp <= temp && temp < 0) || iter == 100)
+		if (fabs(fp) <= 0.1 * delta) {
+			if (talk)
+				printf("pLMDIF:       - Success\n");
 			break;
+		}
+		if ((parl == 0 && fp <= temp && temp < 0)) {
+			if (talk)
+				printf("pLMDIF:       - abort (special case)\n");
+			break;
+		}
+		if (iter == 100) {
+			if (talk)
+				printf("pLMDIF:       - give up (too many iterations)\n");
+			break;
+		}
 
 		/* compute the newton correction. */
 		for (int j = 0; j < n; ++j) {
