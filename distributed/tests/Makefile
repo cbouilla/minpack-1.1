@@ -1,3 +1,4 @@
+CC = mpicc
 CFLAGS += -Wall -Wextra -I.. -g
 LDLIBS += -lm 
 
