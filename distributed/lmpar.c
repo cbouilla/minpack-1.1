@@ -1,5 +1,6 @@
 #include <math.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <cblas.h>
 
 #include "pminpack.h"
