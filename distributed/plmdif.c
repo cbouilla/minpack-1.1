@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <cblas.h>
+#include <stdio.h>
 
 #include "pminpack.h"
 
