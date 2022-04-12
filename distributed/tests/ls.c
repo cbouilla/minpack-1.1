@@ -2,7 +2,7 @@
 #include <math.h>
 #include <stdbool.h>
 
-#include "minpack.h"
+#include "pminpack.h"
 
 #include "ls.h"
 
@@ -117,7 +117,7 @@ void commentator(int ic, double *x, double *fvec, double ftol, double xtol, int 
 	double target = tests[ic].fnorm2;
 	double target_alt = tests[ic].fnorm2_lastchance;
 
-	double fnorm = enorm_(&m, &fvec[1]);
+	double fnorm = enorm(m, &fvec[1]);
 	double df = fnorm - target;
 	double df2 = (target_alt >= 0) ? fnorm - target_alt : -1;
 	double dx = -1;
@@ -131,14 +131,14 @@ void commentator(int ic, double *x, double *fvec, double ftol, double xtol, int 
 	case 1:
 		for (int j = 1; j <= n; j++)
 			tmp[j] = x[j] + 1;
-		dx = enorm_(&n, &tmp[1]);
+		dx = enorm(n, &tmp[1]);
 		break;
 
 		/* rosenbrock function. */
 	case 4:
 		tmp[1] = x[1] - 1;
 		tmp[2] = x[2] - 1;
-		dx = enorm_(&m, &tmp[1]);
+		dx = enorm(m, &tmp[1]);
 		break;
 
 		/* helical valley function. */
@@ -146,22 +146,22 @@ void commentator(int ic, double *x, double *fvec, double ftol, double xtol, int 
 		tmp[1] = x[1] - 1;
 		tmp[2] = x[2];
 		tmp[3] = x[3];
-		dx = enorm_(&n, &tmp[1]);
+		dx = enorm(n, &tmp[1]);
 		break;
 
 		/* powell singular function. */
 	case 6:
-		dx = enorm_(&n, &fvec[1]);
+		dx = enorm(n, &fvec[1]);
 		break;
 
 		/* freudenstein and roth function. */
 	case 7:
 		tmp[1] = x[1] - 5;
 		tmp[2] = x[2] - 4;
-		dx = enorm_(&n, &tmp[1]);
+		dx = enorm(n, &tmp[1]);
 		tmp[1] = x[1] - 11.41;
 		tmp[2] = x[2] + 0.8968;
-		dx2 = enorm_(&n, &tmp[1]);
+		dx2 = enorm(n, &tmp[1]);
 		break;
 
 		/* bard function. */
@@ -179,15 +179,15 @@ void commentator(int ic, double *x, double *fvec, double ftol, double xtol, int 
 		tmp[1] = x[1] - 1;
 		tmp[2] = x[2] - 10;
 		tmp[3] = x[3] - 1;
-		dx = enorm_(&n, &tmp[1]);
+		dx = enorm(n, &tmp[1]);
 		tmp[1] = x[1] - 10;
 		tmp[2] = x[2] - 1;
 		tmp[3] = x[3] + 1;
-		dx2 = enorm_(&n, &tmp[1]);
+		dx2 = enorm(n, &tmp[1]);
 		tmp[1] = 0;
 		tmp[2] = x[2] - x[1];
 		tmp[3] = x[3];
-		dx3 = enorm_(&n, &tmp[1]);
+		dx3 = enorm(n, &tmp[1]);
 		break;
 
 		/* jennrich and sampson function. */
@@ -195,7 +195,7 @@ void commentator(int ic, double *x, double *fvec, double ftol, double xtol, int 
 		if (m == 10) {
 			tmp[1] = x[1] - 0.2578;
 			tmp[2] = x[2] - 0.2578;
-			dx = enorm_(&n, &tmp[1]);
+			dx = enorm(n, &tmp[1]);
 		}
 		break;
 
@@ -204,11 +204,11 @@ void commentator(int ic, double *x, double *fvec, double ftol, double xtol, int 
 		for (int j = 1; j <= m - 1; j++)
 			tmp[j] = x[1];
 		tmp[m] = pow(x[1], 1 - n);
-		dx = enorm_(&n, &tmp[1]);
+		dx = enorm(n, &tmp[1]);
 		for (int j = 1; j <= m - 1; j++)
 			tmp[j] = x[j];
 		tmp[m] = x[m] - (n + 1);
-		dx2 = enorm_(&n, &tmp[1]);
+		dx2 = enorm(n, &tmp[1]);
 		break;
 	}
 

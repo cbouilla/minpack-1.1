@@ -35,3 +35,7 @@
 /lapackified/benchmarks/speed_lmder1_cross
 /lapackified/benchmarks/speed_lmdif1
 /lapackified/benchmarks/speed_lmdif1_cross
+/distributed/benchmarks/speed_lmdif1_cross
+/distributed/benchmarks/speed_lmdif1
+/distributed/tests/test_extrablacs
+/distributed/tests/test_plmdif1
