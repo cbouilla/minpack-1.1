@@ -114,7 +114,7 @@ int main()
 	Cblacs_get(0, 0, &sysctx);
 
 	/* obtain BLACS grid context */
-	int ctx;
+	int ctx = sysctx;
 	int rank, nprocs;	
 	Cblacs_pinfo(&rank, &nprocs);
 	Cblacs_gridinit(&ctx, "Row-Major", nprow, npcol);
